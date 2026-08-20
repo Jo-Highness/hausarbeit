@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#26B5A8"/>
+      <stop offset="1" stop-color="#2F6BE0"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.18"/>
+      <stop offset="0.5" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="512" height="512" rx="116" fill="url(#bg)"/>
+  <rect x="0" y="0" width="512" height="256" rx="116" fill="url(#sheen)"/>
+  <!-- Besen (mdi:broom, Pictogrammers/Apache-2.0), weiss -->
+  <g transform="translate(96,74) scale(13.2)" fill="#ffffff">
+    <path d="M19.36,2.72L20.78,4.14L15.06,9.85C16.13,11.39 16.28,13.24 15.38,14.44L9.06,8.12C10.26,7.22 12.11,7.37 13.65,8.44L19.36,2.72M5.93,17.57C3.92,15.56 2.69,13.16 2.35,10.92L7.23,8.83L14.67,16.27L12.58,21.15C10.34,20.81 7.94,19.58 5.93,17.57Z"/>
+  </g>
+  <!-- Erledigt-Badge -->
+  <circle cx="378" cy="378" r="92" fill="#ffffff"/>
+  <circle cx="378" cy="378" r="78" fill="#22C55E"/>
+  <g transform="translate(330,330) scale(4)" fill="#ffffff">
+    <path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/>
+  </g>
+</svg>
