@@ -1,0 +1,134 @@
+{
+  "title": "Hausarbeit-Tracker",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Hausarbeit-Tracker",
+        "description": "Creates the household. Manage people, tasks and targets afterwards via the options.",
+        "data": { "title": "Household name" }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Hausarbeit-Tracker is already set up (one entry per household)."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Manage Hausarbeit-Tracker",
+        "menu_options": {
+          "settings": "Settings",
+          "persons": "People",
+          "tasks": "Tasks",
+          "targets": "Targets"
+        }
+      },
+      "settings": {
+        "title": "Settings",
+        "data": {
+          "week_start": "Week start",
+          "stats_days": "Statistics period (days)"
+        }
+      },
+      "persons": {
+        "title": "People",
+        "menu_options": {
+          "person_add": "Add person",
+          "person_edit": "Edit person",
+          "person_remove": "Remove person"
+        }
+      },
+      "person_add": {
+        "title": "Add person",
+        "data": {
+          "name": "Name",
+          "icon": "Icon (mdi)",
+          "color": "Color (optional)",
+          "ha_person_entity": "HA person entity (optional)"
+        }
+      },
+      "person_edit": { "title": "Select person", "data": { "person": "Person" } },
+      "person_edit_form": {
+        "title": "Edit person",
+        "data": {
+          "name": "Name",
+          "icon": "Icon (mdi)",
+          "color": "Color (optional)",
+          "ha_person_entity": "HA person entity (optional)"
+        }
+      },
+      "person_remove": {
+        "title": "Remove person",
+        "description": "Related targets are removed. The execution log is kept.",
+        "data": { "person": "Person" }
+      },
+      "tasks": {
+        "title": "Tasks",
+        "menu_options": {
+          "task_add": "Add task",
+          "task_edit": "Edit task",
+          "task_remove": "Remove task"
+        }
+      },
+      "task_add": {
+        "title": "Add task",
+        "data": {
+          "name": "Name",
+          "icon": "Icon (mdi)",
+          "category": "Category (optional)",
+          "points": "Points/weight",
+          "active": "Active"
+        }
+      },
+      "task_edit": { "title": "Select task", "data": { "task": "Task" } },
+      "task_edit_form": {
+        "title": "Edit task",
+        "data": {
+          "name": "Name",
+          "icon": "Icon (mdi)",
+          "category": "Category (optional)",
+          "points": "Points/weight",
+          "active": "Active"
+        }
+      },
+      "task_remove": {
+        "title": "Remove task",
+        "description": "Related targets are removed. The execution log is kept.",
+        "data": { "task": "Task" }
+      },
+      "targets": {
+        "title": "Targets",
+        "menu_options": {
+          "target_add": "Add/update target",
+          "target_remove": "Remove target"
+        }
+      },
+      "target_add": {
+        "title": "Add or update target",
+        "description": "The same person + task + period overwrites the existing target count.",
+        "data": {
+          "person_id": "Person",
+          "task_id": "Task",
+          "period": "Period",
+          "count": "Target count per period"
+        }
+      },
+      "target_remove": {
+        "title": "Remove target",
+        "data": { "target": "Target" }
+      }
+    },
+    "error": { "invalid": "Invalid input. Please check." },
+    "abort": {
+      "need_person_and_task": "Please create at least one person and one task first."
+    }
+  },
+  "selector": {
+    "week_start": {
+      "options": {
+        "0": "Monday", "1": "Tuesday", "2": "Wednesday", "3": "Thursday",
+        "4": "Friday", "5": "Saturday", "6": "Sunday"
+      }
+    }
+  }
+}

@@ -1,0 +1,272 @@
+log_execution:
+  name: Ausführung protokollieren
+  description: Meldet, dass eine Person eine Aufgabe erledigt hat (erzeugt ein Log-Ereignis).
+  fields:
+    person_id:
+      name: Person
+      description: ID der Person (siehe WebSocket hausarbeit/persons oder Options-Flow).
+      required: true
+      example: per_1a2b3c4d
+      selector:
+        text:
+    task_id:
+      name: Aufgabe
+      description: ID der Aufgabe.
+      required: true
+      example: tsk_1a2b3c4d
+      selector:
+        text:
+    ts:
+      name: Zeitpunkt
+      description: Optionaler Zeitstempel (Standard jetzt) — z. B. zum Nachtragen.
+      required: false
+      selector:
+        datetime:
+    note:
+      name: Notiz
+      description: Optionale Notiz zur Ausführung.
+      required: false
+      selector:
+        text:
+
+delete_execution:
+  name: Ausführung löschen
+  description: Löscht eine protokollierte Ausführung anhand ihrer ID.
+  fields:
+    execution_id:
+      name: Ausführungs-ID
+      description: ID der zu löschenden Ausführung.
+      required: true
+      example: exe_1a2b3c4d
+      selector:
+        text:
+
+correct_execution:
+  name: Ausführung korrigieren
+  description: Korrigiert Person, Aufgabe, Zeitpunkt oder Notiz einer Ausführung.
+  fields:
+    execution_id:
+      name: Ausführungs-ID
+      required: true
+      selector:
+        text:
+    person_id:
+      name: Person (neu)
+      required: false
+      selector:
+        text:
+    task_id:
+      name: Aufgabe (neu)
+      required: false
+      selector:
+        text:
+    ts:
+      name: Zeitpunkt (neu)
+      required: false
+      selector:
+        datetime:
+    note:
+      name: Notiz (neu)
+      required: false
+      selector:
+        text:
+
+add_task:
+  name: Aufgabe anlegen
+  description: Legt eine neue Hausarbeit an.
+  fields:
+    name:
+      name: Name
+      required: true
+      example: Spülmaschine ausräumen
+      selector:
+        text:
+    icon:
+      name: Icon (mdi)
+      required: false
+      example: mdi:dishwasher
+      selector:
+        icon:
+    category:
+      name: Kategorie
+      required: false
+      selector:
+        text:
+    points:
+      name: Punkte/Gewicht
+      description: Gewicht der Aufgabe für Statistiken (Standard 1).
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 0.5
+          mode: box
+    active:
+      name: Aktiv
+      required: false
+      selector:
+        boolean:
+
+update_task:
+  name: Aufgabe ändern
+  description: Ändert Eigenschaften einer bestehenden Aufgabe.
+  fields:
+    task_id:
+      name: Aufgabe
+      required: true
+      selector:
+        text:
+    name:
+      name: Name
+      required: false
+      selector:
+        text:
+    icon:
+      name: Icon (mdi)
+      required: false
+      selector:
+        icon:
+    category:
+      name: Kategorie
+      required: false
+      selector:
+        text:
+    points:
+      name: Punkte/Gewicht
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 0.5
+          mode: box
+    active:
+      name: Aktiv
+      required: false
+      selector:
+        boolean:
+
+remove_task:
+  name: Aufgabe entfernen
+  description: Löscht eine Aufgabe (zugehörige Soll-Vorgaben werden entfernt, das Log bleibt).
+  fields:
+    task_id:
+      name: Aufgabe
+      required: true
+      selector:
+        text:
+
+add_person:
+  name: Person anlegen
+  description: Legt eine neue Person an.
+  fields:
+    name:
+      name: Name
+      required: true
+      example: Anna
+      selector:
+        text:
+    icon:
+      name: Icon (mdi)
+      required: false
+      selector:
+        icon:
+    color:
+      name: Farbe
+      required: false
+      example: "#3f51b5"
+      selector:
+        text:
+    ha_person_entity:
+      name: HA-Personen-Entität
+      description: Optionale Verknüpfung zu einer bestehenden person.*-Entität.
+      required: false
+      selector:
+        entity:
+          domain: person
+
+update_person:
+  name: Person ändern
+  fields:
+    person_id:
+      name: Person
+      required: true
+      selector:
+        text:
+    name:
+      name: Name
+      required: false
+      selector:
+        text:
+    icon:
+      name: Icon (mdi)
+      required: false
+      selector:
+        icon:
+    color:
+      name: Farbe
+      required: false
+      selector:
+        text:
+    ha_person_entity:
+      name: HA-Personen-Entität
+      required: false
+      selector:
+        entity:
+          domain: person
+
+remove_person:
+  name: Person entfernen
+  description: Löscht eine Person (zugehörige Soll-Vorgaben werden entfernt, das Log bleibt).
+  fields:
+    person_id:
+      name: Person
+      required: true
+      selector:
+        text:
+
+set_target:
+  name: Soll-Vorgabe setzen
+  description: Legt fest/ändert, wie oft eine Person eine Aufgabe pro Periode erledigen soll.
+  fields:
+    person_id:
+      name: Person
+      required: true
+      selector:
+        text:
+    task_id:
+      name: Aufgabe
+      required: true
+      selector:
+        text:
+    period:
+      name: Periode
+      required: true
+      selector:
+        select:
+          options:
+            - value: day
+              label: Tag
+            - value: week
+              label: Woche
+            - value: month
+              label: Monat
+    count:
+      name: Soll-Anzahl
+      description: Wie oft pro Periode.
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 1000
+          mode: box
+
+remove_target:
+  name: Soll-Vorgabe entfernen
+  fields:
+    target_id:
+      name: Soll-Vorgabe-ID
+      required: true
+      selector:
+        text:

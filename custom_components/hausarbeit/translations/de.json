@@ -1,0 +1,144 @@
+{
+  "title": "Hausarbeit-Tracker",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Hausarbeit-Tracker einrichten",
+        "description": "Legt den Haushalt an. Personen, Aufgaben und Soll-Vorgaben verwaltest du danach über die Optionen.",
+        "data": {
+          "title": "Name des Haushalts"
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Der Hausarbeit-Tracker ist bereits eingerichtet (ein Eintrag pro Haushalt)."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Hausarbeit-Tracker verwalten",
+        "menu_options": {
+          "settings": "Einstellungen",
+          "persons": "Personen",
+          "tasks": "Aufgaben",
+          "targets": "Soll-Vorgaben"
+        }
+      },
+      "settings": {
+        "title": "Einstellungen",
+        "data": {
+          "week_start": "Wochenstart",
+          "stats_days": "Statistik-Zeitraum (Tage)"
+        }
+      },
+      "persons": {
+        "title": "Personen",
+        "menu_options": {
+          "person_add": "Person hinzufügen",
+          "person_edit": "Person bearbeiten",
+          "person_remove": "Person entfernen"
+        }
+      },
+      "person_add": {
+        "title": "Person hinzufügen",
+        "data": {
+          "name": "Name",
+          "icon": "Icon (mdi)",
+          "color": "Farbe (optional)",
+          "ha_person_entity": "HA-Personen-Entität (optional)"
+        }
+      },
+      "person_edit": {
+        "title": "Person auswählen",
+        "data": { "person": "Person" }
+      },
+      "person_edit_form": {
+        "title": "Person bearbeiten",
+        "data": {
+          "name": "Name",
+          "icon": "Icon (mdi)",
+          "color": "Farbe (optional)",
+          "ha_person_entity": "HA-Personen-Entität (optional)"
+        }
+      },
+      "person_remove": {
+        "title": "Person entfernen",
+        "description": "Die zugehörigen Soll-Vorgaben werden entfernt. Das Ausführungs-Log bleibt erhalten.",
+        "data": { "person": "Person" }
+      },
+      "tasks": {
+        "title": "Aufgaben",
+        "menu_options": {
+          "task_add": "Aufgabe hinzufügen",
+          "task_edit": "Aufgabe bearbeiten",
+          "task_remove": "Aufgabe entfernen"
+        }
+      },
+      "task_add": {
+        "title": "Aufgabe hinzufügen",
+        "data": {
+          "name": "Name",
+          "icon": "Icon (mdi)",
+          "category": "Kategorie (optional)",
+          "points": "Punkte/Gewicht",
+          "active": "Aktiv"
+        }
+      },
+      "task_edit": {
+        "title": "Aufgabe auswählen",
+        "data": { "task": "Aufgabe" }
+      },
+      "task_edit_form": {
+        "title": "Aufgabe bearbeiten",
+        "data": {
+          "name": "Name",
+          "icon": "Icon (mdi)",
+          "category": "Kategorie (optional)",
+          "points": "Punkte/Gewicht",
+          "active": "Aktiv"
+        }
+      },
+      "task_remove": {
+        "title": "Aufgabe entfernen",
+        "description": "Die zugehörigen Soll-Vorgaben werden entfernt. Das Ausführungs-Log bleibt erhalten.",
+        "data": { "task": "Aufgabe" }
+      },
+      "targets": {
+        "title": "Soll-Vorgaben",
+        "menu_options": {
+          "target_add": "Soll-Vorgabe anlegen/ändern",
+          "target_remove": "Soll-Vorgabe entfernen"
+        }
+      },
+      "target_add": {
+        "title": "Soll-Vorgabe anlegen oder ändern",
+        "description": "Gleiche Kombination aus Person, Aufgabe und Periode überschreibt die bestehende Soll-Anzahl.",
+        "data": {
+          "person_id": "Person",
+          "task_id": "Aufgabe",
+          "period": "Periode",
+          "count": "Soll-Anzahl pro Periode"
+        }
+      },
+      "target_remove": {
+        "title": "Soll-Vorgabe entfernen",
+        "data": { "target": "Soll-Vorgabe" }
+      }
+    },
+    "error": {
+      "invalid": "Eingabe ungültig. Bitte prüfen."
+    },
+    "abort": {
+      "need_person_and_task": "Bitte lege zuerst mindestens eine Person und eine Aufgabe an."
+    }
+  },
+  "selector": {
+    "week_start": {
+      "options": {
+        "0": "Montag", "1": "Dienstag", "2": "Mittwoch", "3": "Donnerstag",
+        "4": "Freitag", "5": "Samstag", "6": "Sonntag"
+      }
+    }
+  }
+}
