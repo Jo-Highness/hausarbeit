@@ -23,6 +23,116 @@ const WS_SUBSCRIBE = "hausarbeit/subscribe";
 
 const RANGE_OPTIONS = [7, 30, 90];
 
+// --- Übersetzungen (kein Build/Import → Tabelle inline pro Karte) ---------- //
+const STRINGS = {
+  de: {
+    title_default: "Hausarbeit-Statistik",
+    range_group: "Zeitraum wählen",
+    days_btn: (d) => `${d} Tage`,
+    view_group: "Ansicht wählen",
+    ranking: "Ranking",
+    tasks: "Aufgaben",
+    load_error: "Statistik konnte nicht geladen werden.",
+    loading: "Lade …",
+    no_data: "Keine Daten.",
+    no_entries: "Keine Einträge im Zeitraum.",
+    ranking_block: (n) => `Ranking (${n} Tage)`,
+    rank_aria: (name, count, pct) =>
+      `${name}: ${count} Erledigungen, ${pct} Prozent Anteil`,
+    points: (n) => `${n} P`,
+    no_task_data: "Keine Aufgaben-Daten im Zeitraum.",
+    per_task_block: (n) => `Pro Aufgabe (${n} Tage)`,
+    th_task: "Aufgabe",
+    per_person_block: "Personen-Summen",
+    th_person: "Person",
+    th_today: "Heute",
+    th_d7: "7T",
+    th_d30: "30T",
+    th_d90: "90T",
+    th_month: "Monat",
+    th_total: "Gesamt",
+    th_points: "Punkte",
+    ed_title: "Titel",
+    ed_default_range: "Standard-Zeitraum (Tage)",
+    ed_default_view: "Standard-Ansicht",
+  },
+  en: {
+    title_default: "Chore statistics",
+    range_group: "Select period",
+    days_btn: (d) => `${d} days`,
+    view_group: "Select view",
+    ranking: "Ranking",
+    tasks: "Chores",
+    load_error: "Could not load statistics.",
+    loading: "Loading …",
+    no_data: "No data.",
+    no_entries: "No entries in this period.",
+    ranking_block: (n) => `Ranking (${n} days)`,
+    rank_aria: (name, count, pct) =>
+      `${name}: ${count} completions, ${pct} percent share`,
+    points: (n) => `${n} pt`,
+    no_task_data: "No chore data in this period.",
+    per_task_block: (n) => `Per chore (${n} days)`,
+    th_task: "Chore",
+    per_person_block: "Per-person totals",
+    th_person: "Person",
+    th_today: "Today",
+    th_d7: "7d",
+    th_d30: "30d",
+    th_d90: "90d",
+    th_month: "Month",
+    th_total: "Total",
+    th_points: "Points",
+    ed_title: "Title",
+    ed_default_range: "Default period (days)",
+    ed_default_view: "Default view",
+  },
+  es: {
+    title_default: "Estadísticas de tareas",
+    range_group: "Elegir periodo",
+    days_btn: (d) => `${d} días`,
+    view_group: "Elegir vista",
+    ranking: "Clasificación",
+    tasks: "Tareas",
+    load_error: "No se pudieron cargar las estadísticas.",
+    loading: "Cargando …",
+    no_data: "Sin datos.",
+    no_entries: "Sin registros en este periodo.",
+    ranking_block: (n) => `Clasificación (${n} días)`,
+    rank_aria: (name, count, pct) =>
+      `${name}: ${count} tareas realizadas, ${pct} por ciento de participación`,
+    points: (n) => `${n} pt`,
+    no_task_data: "Sin datos de tareas en este periodo.",
+    per_task_block: (n) => `Por tarea (${n} días)`,
+    th_task: "Tarea",
+    per_person_block: "Totales por persona",
+    th_person: "Persona",
+    th_today: "Hoy",
+    th_d7: "7d",
+    th_d30: "30d",
+    th_d90: "90d",
+    th_month: "Mes",
+    th_total: "Total",
+    th_points: "Puntos",
+    ed_title: "Título",
+    ed_default_range: "Periodo predeterminado (días)",
+    ed_default_view: "Vista predeterminada",
+  },
+};
+
+// Sprache aus HA ableiten (Fallback en → de) und Key nachschlagen.
+function translate(hass, key, args) {
+  const lang = (
+    (hass && ((hass.locale && hass.locale.language) || hass.language)) ||
+    "de"
+  ).split("-")[0];
+  const table = STRINGS[lang] || STRINGS.en || STRINGS.de;
+  let v = table[key];
+  if (v === undefined)
+    v = STRINGS.en[key] !== undefined ? STRINGS.en[key] : STRINGS.de[key];
+  return typeof v === "function" ? v(...args) : v;
+}
+
 class HausarbeitStatsCard extends LitElement {
   static get properties() {
     return {
@@ -87,6 +197,10 @@ class HausarbeitStatsCard extends LitElement {
     return this._hass;
   }
 
+  _t(key, ...args) {
+    return translate(this._hass, key, args);
+  }
+
   connectedCallback() {
     super.connectedCallback();
     if (this._hass && !this._unsub) {
@@ -147,7 +261,7 @@ class HausarbeitStatsCard extends LitElement {
       this._error = null;
       this._loaded = true;
     } catch (err) {
-      this._error = "Statistik konnte nicht geladen werden.";
+      this._error = this._t("load_error");
     } finally {
       this._loading = false;
     }
@@ -165,12 +279,16 @@ class HausarbeitStatsCard extends LitElement {
 
   render() {
     if (!this._config) return html``;
-    const title = this._config.title || "Hausarbeit-Statistik";
+    const title = this._config.title || this._t("title_default");
     return html`
       <ha-card .header=${title}>
         <div class="content">
           <div class="controls">
-            <div class="segmented" role="group" aria-label="Zeitraum wählen">
+            <div
+              class="segmented"
+              role="group"
+              aria-label=${this._t("range_group")}
+            >
               ${RANGE_OPTIONS.map(
                 (d) => html`
                   <button
@@ -178,25 +296,29 @@ class HausarbeitStatsCard extends LitElement {
                     @click=${() => this._setDays(d)}
                     aria-pressed=${this._days === d ? "true" : "false"}
                   >
-                    ${d} Tage
+                    ${this._t("days_btn", d)}
                   </button>
                 `
               )}
             </div>
-            <div class="segmented" role="group" aria-label="Ansicht wählen">
+            <div
+              class="segmented"
+              role="group"
+              aria-label=${this._t("view_group")}
+            >
               <button
                 class=${this._view === "ranking" ? "active" : ""}
                 @click=${() => this._setView("ranking")}
                 aria-pressed=${this._view === "ranking" ? "true" : "false"}
               >
-                Ranking
+                ${this._t("ranking")}
               </button>
               <button
                 class=${this._view === "tasks" ? "active" : ""}
                 @click=${() => this._setView("tasks")}
                 aria-pressed=${this._view === "tasks" ? "true" : "false"}
               >
-                Aufgaben
+                ${this._t("tasks")}
               </button>
             </div>
           </div>
@@ -204,7 +326,7 @@ class HausarbeitStatsCard extends LitElement {
           ${this._error
             ? html`<div class="error" role="alert">${this._error}</div>`
             : this._loading && !this._loaded
-            ? html`<div class="hint">Lade …</div>`
+            ? html`<div class="hint">${this._t("loading")}</div>`
             : this._renderStats()}
         </div>
       </ha-card>
@@ -213,7 +335,7 @@ class HausarbeitStatsCard extends LitElement {
 
   _renderStats() {
     const s = this._stats;
-    if (!s) return html`<div class="hint">Keine Daten.</div>`;
+    if (!s) return html`<div class="hint">${this._t("no_data")}</div>`;
     return html`
       ${this._view === "ranking" ? this._renderRanking(s) : this._renderTasks(s)}
       ${this._renderPerPerson(s)}
@@ -225,10 +347,12 @@ class HausarbeitStatsCard extends LitElement {
       .slice()
       .sort((a, b) => (b.count || 0) - (a.count || 0));
     if (!ranking.length) {
-      return html`<div class="hint">Keine Einträge im Zeitraum.</div>`;
+      return html`<div class="hint">${this._t("no_entries")}</div>`;
     }
     return html`
-      <div class="block-label">Ranking (${s.days ?? this._days} Tage)</div>
+      <div class="block-label">
+        ${this._t("ranking_block", s.days ?? this._days)}
+      </div>
       <div class="ranking">
         ${ranking.map((r) => {
           const pct = Math.max(0, Math.min(100, Number(r.share_percent) || 0));
@@ -238,18 +362,20 @@ class HausarbeitStatsCard extends LitElement {
                 <span class="rank-name">${r.person_name}</span>
                 <span class="rank-vals">
                   ${r.count}×
-                  <span class="muted">· ${r.points} P · ${Math.round(pct)}%</span>
+                  <span class="muted"
+                    >· ${this._t("points", r.points)} · ${Math.round(pct)}%</span
+                  >
                 </span>
               </div>
               <div
                 class="bar-track"
                 role="img"
-                aria-label=${r.person_name +
-                ": " +
-                r.count +
-                " Erledigungen, " +
-                Math.round(pct) +
-                " Prozent Anteil"}
+                aria-label=${this._t(
+                  "rank_aria",
+                  r.person_name,
+                  r.count,
+                  Math.round(pct)
+                )}
               >
                 <div class="bar-fill" style="width:${pct}%"></div>
               </div>
@@ -263,7 +389,7 @@ class HausarbeitStatsCard extends LitElement {
   _renderTasks(s) {
     const perTask = s.per_task || [];
     if (!perTask.length) {
-      return html`<div class="hint">Keine Aufgaben-Daten im Zeitraum.</div>`;
+      return html`<div class="hint">${this._t("no_task_data")}</div>`;
     }
     // Personen-Spalten aus den per_person-Listen zusammenführen (stabile Reihenfolge).
     const personMap = new Map();
@@ -276,12 +402,14 @@ class HausarbeitStatsCard extends LitElement {
     const persons = Array.from(personMap.entries()); // [id, name]
 
     return html`
-      <div class="block-label">Pro Aufgabe (${s.days ?? this._days} Tage)</div>
+      <div class="block-label">
+        ${this._t("per_task_block", s.days ?? this._days)}
+      </div>
       <div class="table-scroll">
         <table class="grid">
           <thead>
             <tr>
-              <th scope="col">Aufgabe</th>
+              <th scope="col">${this._t("th_task")}</th>
               ${persons.map(([, name]) => html`<th scope="col">${name}</th>`)}
               <th scope="col">Σ</th>
             </tr>
@@ -311,19 +439,19 @@ class HausarbeitStatsCard extends LitElement {
     const pp = s.per_person || [];
     if (!pp.length) return "";
     return html`
-      <div class="block-label">Personen-Summen</div>
+      <div class="block-label">${this._t("per_person_block")}</div>
       <div class="table-scroll">
         <table class="grid compact">
           <thead>
             <tr>
-              <th scope="col">Person</th>
-              <th scope="col">Heute</th>
-              <th scope="col">7T</th>
-              <th scope="col">30T</th>
-              <th scope="col">90T</th>
-              <th scope="col">Monat</th>
-              <th scope="col">Gesamt</th>
-              <th scope="col">Punkte</th>
+              <th scope="col">${this._t("th_person")}</th>
+              <th scope="col">${this._t("th_today")}</th>
+              <th scope="col">${this._t("th_d7")}</th>
+              <th scope="col">${this._t("th_d30")}</th>
+              <th scope="col">${this._t("th_d90")}</th>
+              <th scope="col">${this._t("th_month")}</th>
+              <th scope="col">${this._t("th_total")}</th>
+              <th scope="col">${this._t("th_points")}</th>
             </tr>
           </thead>
           <tbody>
@@ -489,6 +617,10 @@ class HausarbeitStatsCardEditor extends LitElement {
     this._config = { ...config };
   }
 
+  _t(key, ...args) {
+    return translate(this.hass, key, args);
+  }
+
   _emit(cfg) {
     this._config = cfg;
     this.dispatchEvent(
@@ -517,7 +649,7 @@ class HausarbeitStatsCardEditor extends LitElement {
     return html`
       <div class="form">
         <label>
-          Titel
+          ${this._t("ed_title")}
           <input
             type="text"
             data-key="title"
@@ -526,7 +658,7 @@ class HausarbeitStatsCardEditor extends LitElement {
           />
         </label>
         <label>
-          Standard-Zeitraum (Tage)
+          ${this._t("ed_default_range")}
           <select
             data-key="days"
             .value=${this._config.days != null ? String(this._config.days) : "90"}
@@ -538,14 +670,14 @@ class HausarbeitStatsCardEditor extends LitElement {
           </select>
         </label>
         <label>
-          Standard-Ansicht
+          ${this._t("ed_default_view")}
           <select
             data-key="default_view"
             .value=${this._config.default_view || "ranking"}
             @change=${this._valueChanged}
           >
-            <option value="ranking">Ranking</option>
-            <option value="tasks">Aufgaben</option>
+            <option value="ranking">${this._t("ranking")}</option>
+            <option value="tasks">${this._t("tasks")}</option>
           </select>
         </label>
       </div>

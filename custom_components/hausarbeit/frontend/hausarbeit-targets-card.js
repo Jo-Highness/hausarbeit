@@ -20,11 +20,104 @@ const css = LitElement.prototype.css;
 const WS_TARGETS = "hausarbeit/targets";
 const WS_SUBSCRIBE = "hausarbeit/subscribe";
 
-const PERIOD_LABEL = {
-  day: "täglich",
-  week: "diese Woche",
-  month: "diesen Monat",
+// --- Übersetzungen (kein Build/Import → Tabelle inline pro Karte) ---------- //
+const STRINGS = {
+  de: {
+    title_default: "Soll / Ist",
+    load_error: "Ziele konnten nicht geladen werden.",
+    loading: "Lade …",
+    no_targets: (hasFilter) =>
+      `Keine Ziele definiert${hasFilter ? " (für diesen Filter)" : ""}.`,
+    period_day: "täglich",
+    period_week: "diese Woche",
+    period_month: "diesen Monat",
+    remaining: (n, period) => `noch ${n}× ${period}`,
+    target_done: "Ziel erreicht",
+    until: (date) => `bis ${date}`,
+    target_aria: (name, ist, count, period, pct, onTrack) =>
+      `${name}: ${ist} von ${count} ${period}, ${pct} Prozent${
+        onTrack ? ", im Plan" : ", im Rückstand"
+      }`,
+    ed_title: "Titel",
+    ed_period_filter: "Periode-Filter",
+    ed_opt_all: "Alle",
+    ed_opt_daily: "Täglich",
+    ed_opt_weekly: "Wöchentlich",
+    ed_opt_monthly: "Monatlich",
+    ed_person_filter: "Personen-Filter (person_id)",
+    ed_person_placeholder: "z. B. per_1a2b3c4d",
+  },
+  en: {
+    title_default: "Target / Actual",
+    load_error: "Could not load targets.",
+    loading: "Loading …",
+    no_targets: (hasFilter) =>
+      `No targets defined${hasFilter ? " (for this filter)" : ""}.`,
+    period_day: "per day",
+    period_week: "this week",
+    period_month: "this month",
+    remaining: (n, period) => `${n}× more ${period}`,
+    target_done: "Target reached",
+    until: (date) => `by ${date}`,
+    target_aria: (name, ist, count, period, pct, onTrack) =>
+      `${name}: ${ist} of ${count} ${period}, ${pct} percent${
+        onTrack ? ", on track" : ", behind"
+      }`,
+    ed_title: "Title",
+    ed_period_filter: "Period filter",
+    ed_opt_all: "All",
+    ed_opt_daily: "Daily",
+    ed_opt_weekly: "Weekly",
+    ed_opt_monthly: "Monthly",
+    ed_person_filter: "Person filter (person_id)",
+    ed_person_placeholder: "e.g. per_1a2b3c4d",
+  },
+  es: {
+    title_default: "Objetivo / Real",
+    load_error: "No se pudieron cargar los objetivos.",
+    loading: "Cargando …",
+    no_targets: (hasFilter) =>
+      `No hay objetivos definidos${hasFilter ? " (para este filtro)" : ""}.`,
+    period_day: "al día",
+    period_week: "esta semana",
+    period_month: "este mes",
+    remaining: (n, period) => `${n}× más ${period}`,
+    target_done: "Objetivo alcanzado",
+    until: (date) => `hasta ${date}`,
+    target_aria: (name, ist, count, period, pct, onTrack) =>
+      `${name}: ${ist} de ${count} ${period}, ${pct} por ciento${
+        onTrack ? ", al día" : ", atrasado"
+      }`,
+    ed_title: "Título",
+    ed_period_filter: "Filtro de periodo",
+    ed_opt_all: "Todos",
+    ed_opt_daily: "Diario",
+    ed_opt_weekly: "Semanal",
+    ed_opt_monthly: "Mensual",
+    ed_person_filter: "Filtro de persona (person_id)",
+    ed_person_placeholder: "p. ej. per_1a2b3c4d",
+  },
 };
+
+// Für die Datumsformatierung passende Locale je Sprache.
+const DATE_LOCALE = { de: "de-DE", en: "en-GB", es: "es-ES" };
+
+// Sprache aus HA ableiten (Fallback en → de) und Key nachschlagen.
+function langOf(hass) {
+  return (
+    (hass && ((hass.locale && hass.locale.language) || hass.language)) ||
+    "de"
+  ).split("-")[0];
+}
+
+function translate(hass, key, args) {
+  const lang = langOf(hass);
+  const table = STRINGS[lang] || STRINGS.en || STRINGS.de;
+  let v = table[key];
+  if (v === undefined)
+    v = STRINGS.en[key] !== undefined ? STRINGS.en[key] : STRINGS.de[key];
+  return typeof v === "function" ? v(...args) : v;
+}
 
 class HausarbeitTargetsCard extends LitElement {
   static get properties() {
@@ -74,6 +167,17 @@ class HausarbeitTargetsCard extends LitElement {
 
   get hass() {
     return this._hass;
+  }
+
+  _t(key, ...args) {
+    return translate(this._hass, key, args);
+  }
+
+  _period(p) {
+    const key = { day: "period_day", week: "period_week", month: "period_month" }[
+      p
+    ];
+    return key ? this._t(key) : p || "";
   }
 
   connectedCallback() {
@@ -142,7 +246,7 @@ class HausarbeitTargetsCard extends LitElement {
       this._error = null;
       this._loaded = true;
     } catch (err) {
-      this._error = "Ziele konnten nicht geladen werden.";
+      this._error = this._t("load_error");
     } finally {
       this._loading = false;
     }
@@ -162,14 +266,14 @@ class HausarbeitTargetsCard extends LitElement {
 
   render() {
     if (!this._config) return html``;
-    const title = this._config.title || "Soll / Ist";
+    const title = this._config.title || this._t("title_default");
     return html`
       <ha-card .header=${title}>
         <div class="content">
           ${this._error
             ? html`<div class="error" role="alert">${this._error}</div>`
             : this._loading && !this._loaded
-            ? html`<div class="hint">Lade …</div>`
+            ? html`<div class="hint">${this._t("loading")}</div>`
             : this._renderBody()}
         </div>
       </ha-card>
@@ -179,9 +283,7 @@ class HausarbeitTargetsCard extends LitElement {
   _renderBody() {
     if (!this._targets.length) {
       return html`<div class="hint">
-        Keine Ziele definiert${this._config.person || this._config.period
-          ? " (für diesen Filter)"
-          : ""}.
+        ${this._t("no_targets", !!(this._config.person || this._config.period))}
       </div>`;
     }
     const groups = this._groupByPerson();
@@ -205,7 +307,7 @@ class HausarbeitTargetsCard extends LitElement {
     if (!t.on_track) {
       color = pct >= 50 ? "var(--warning-color)" : "var(--error-color)";
     }
-    const periodLabel = PERIOD_LABEL[t.period] || t.period || "";
+    const periodLabel = this._period(t.period);
     const rest = Number(t.rest) || 0;
     return html`
       <div class="target">
@@ -219,28 +321,28 @@ class HausarbeitTargetsCard extends LitElement {
         <div
           class="bar-track"
           role="img"
-          aria-label=${t.task_name +
-          ": " +
-          t.ist +
-          " von " +
-          t.count +
-          " " +
-          periodLabel +
-          ", " +
-          Math.round(pct) +
-          " Prozent" +
-          (t.on_track ? ", im Plan" : ", im Rückstand")}
+          aria-label=${this._t(
+            "target_aria",
+            t.task_name,
+            t.ist,
+            t.count,
+            periodLabel,
+            Math.round(pct),
+            !!t.on_track
+          )}
         >
           <div class="bar-fill" style="width:${capped}%; background:${color};"></div>
         </div>
         <div class="target-foot">
           ${rest > 0
             ? html`<span class="rest" style="color:${color};"
-                >noch ${rest}× ${periodLabel}</span
+                >${this._t("remaining", rest, periodLabel)}</span
               >`
-            : html`<span class="rest done">Ziel erreicht</span>`}
+            : html`<span class="rest done">${this._t("target_done")}</span>`}
           ${t.period_end
-            ? html`<span class="end muted">bis ${this._fmtDate(t.period_end)}</span>`
+            ? html`<span class="end muted"
+                >${this._t("until", this._fmtDate(t.period_end))}</span
+              >`
             : ""}
         </div>
       </div>
@@ -251,7 +353,8 @@ class HausarbeitTargetsCard extends LitElement {
     try {
       const d = new Date(iso);
       if (isNaN(d.getTime())) return iso;
-      return d.toLocaleDateString("de-DE", {
+      const locale = DATE_LOCALE[langOf(this._hass)] || "de-DE";
+      return d.toLocaleDateString(locale, {
         day: "2-digit",
         month: "2-digit",
       });
@@ -350,6 +453,10 @@ class HausarbeitTargetsCardEditor extends LitElement {
     this._config = { ...config };
   }
 
+  _t(key, ...args) {
+    return translate(this.hass, key, args);
+  }
+
   _emit(cfg) {
     this._config = cfg;
     this.dispatchEvent(
@@ -377,7 +484,7 @@ class HausarbeitTargetsCardEditor extends LitElement {
     return html`
       <div class="form">
         <label>
-          Titel
+          ${this._t("ed_title")}
           <input
             type="text"
             data-key="title"
@@ -386,26 +493,26 @@ class HausarbeitTargetsCardEditor extends LitElement {
           />
         </label>
         <label>
-          Periode-Filter
+          ${this._t("ed_period_filter")}
           <select
             data-key="period"
             .value=${this._config.period || ""}
             @change=${this._valueChanged}
           >
-            <option value="">Alle</option>
-            <option value="day">Täglich</option>
-            <option value="week">Wöchentlich</option>
-            <option value="month">Monatlich</option>
+            <option value="">${this._t("ed_opt_all")}</option>
+            <option value="day">${this._t("ed_opt_daily")}</option>
+            <option value="week">${this._t("ed_opt_weekly")}</option>
+            <option value="month">${this._t("ed_opt_monthly")}</option>
           </select>
         </label>
         <label>
-          Personen-Filter (person_id)
+          ${this._t("ed_person_filter")}
           <input
             type="text"
             data-key="person"
             .value=${this._config.person || ""}
             @input=${this._valueChanged}
-            placeholder="z. B. per_1a2b3c4d"
+            placeholder=${this._t("ed_person_placeholder")}
           />
         </label>
       </div>

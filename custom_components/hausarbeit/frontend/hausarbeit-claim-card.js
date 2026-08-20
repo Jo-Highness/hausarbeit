@@ -26,6 +26,131 @@ const WS_LOG_EXECUTION = "hausarbeit/log_execution";
 const WS_DELETE_EXECUTION = "hausarbeit/delete_execution";
 const WS_SUBSCRIBE = "hausarbeit/subscribe";
 
+// --- Übersetzungen (kein Build/Import → Tabelle inline pro Karte) ---------- //
+const STRINGS = {
+  de: {
+    title_default: "Erledigt melden",
+    load_error: "Daten konnten nicht geladen werden.",
+    select_person_first: "Bitte zuerst eine Person wählen.",
+    logged: (task, pName) =>
+      `${task}${pName ? " für " + pName : ""} eingetragen.`,
+    undone: "Eintrag rückgängig gemacht.",
+    undo_failed: "Rückgängig fehlgeschlagen.",
+    log_failed: "Eintragen fehlgeschlagen.",
+    loading: "Lade …",
+    no_persons:
+      "Keine Personen vorhanden. Bitte in den Hausarbeit-Einstellungen anlegen.",
+    no_tasks:
+      "Keine aktiven Aufgaben vorhanden. Bitte in den Hausarbeit-Einstellungen anlegen.",
+    person: "Person",
+    select_person: "Person wählen",
+    task_heading: (name) => (name ? `Aufgabe für ${name}` : "Aufgabe"),
+    log_task_group: "Aufgabe eintragen",
+    note_placeholder: "Notiz (optional)",
+    note_label: "Notiz",
+    backdate_summary: "Nachtragen (Zeitpunkt setzen)",
+    exec_time_label: "Zeitpunkt der Ausführung",
+    use_now: "Jetzt verwenden",
+    reset_time: "Zeitpunkt zurücksetzen",
+    person_named: (name) => "Person " + name,
+    log_task_named: (name) => "Aufgabe eintragen: " + name,
+    select_person_first_short: "Bitte zuerst Person wählen",
+    points: (n) => `${n} P`,
+    undo_last: "Letzten Eintrag rückgängig machen",
+    undo: "Rückgängig",
+    ed_title: "Titel",
+    ed_columns: "Spalten",
+    ed_show_note: "Notizfeld anzeigen",
+    ed_filter_hint: () =>
+      html`Filter <code>persons</code>/<code>tasks</code> (Listen von IDs) bei
+      Bedarf direkt im YAML setzen.`,
+  },
+  en: {
+    title_default: "Log a chore",
+    load_error: "Could not load data.",
+    select_person_first: "Please select a person first.",
+    logged: (task, pName) => `${task}${pName ? " for " + pName : ""} logged.`,
+    undone: "Entry undone.",
+    undo_failed: "Undo failed.",
+    log_failed: "Could not log the entry.",
+    loading: "Loading …",
+    no_persons: "No people yet. Please add them in the Hausarbeit settings.",
+    no_tasks:
+      "No active chores yet. Please add them in the Hausarbeit settings.",
+    person: "Person",
+    select_person: "Select person",
+    task_heading: (name) => (name ? `Chore for ${name}` : "Chore"),
+    log_task_group: "Log a chore",
+    note_placeholder: "Note (optional)",
+    note_label: "Note",
+    backdate_summary: "Add later (set time)",
+    exec_time_label: "Time of completion",
+    use_now: "Use now",
+    reset_time: "Reset time",
+    person_named: (name) => "Person " + name,
+    log_task_named: (name) => "Log chore: " + name,
+    select_person_first_short: "Please select a person first",
+    points: (n) => `${n} pt`,
+    undo_last: "Undo last entry",
+    undo: "Undo",
+    ed_title: "Title",
+    ed_columns: "Columns",
+    ed_show_note: "Show note field",
+    ed_filter_hint: () =>
+      html`Set the <code>persons</code>/<code>tasks</code> filters (lists of IDs)
+      directly in YAML if needed.`,
+  },
+  es: {
+    title_default: "Registrar tarea",
+    load_error: "No se pudieron cargar los datos.",
+    select_person_first: "Selecciona primero una persona.",
+    logged: (task, pName) =>
+      `${task}${pName ? " para " + pName : ""} registrada.`,
+    undone: "Entrada deshecha.",
+    undo_failed: "No se pudo deshacer.",
+    log_failed: "No se pudo registrar la entrada.",
+    loading: "Cargando …",
+    no_persons: "Aún no hay personas. Añádelas en los ajustes de Hausarbeit.",
+    no_tasks:
+      "Aún no hay tareas activas. Añádelas en los ajustes de Hausarbeit.",
+    person: "Persona",
+    select_person: "Elegir persona",
+    task_heading: (name) => (name ? `Tarea para ${name}` : "Tarea"),
+    log_task_group: "Registrar tarea",
+    note_placeholder: "Nota (opcional)",
+    note_label: "Nota",
+    backdate_summary: "Registrar después (fijar hora)",
+    exec_time_label: "Hora de realización",
+    use_now: "Usar ahora",
+    reset_time: "Restablecer hora",
+    person_named: (name) => "Persona " + name,
+    log_task_named: (name) => "Registrar tarea: " + name,
+    select_person_first_short: "Selecciona primero una persona",
+    points: (n) => `${n} pt`,
+    undo_last: "Deshacer última entrada",
+    undo: "Deshacer",
+    ed_title: "Título",
+    ed_columns: "Columnas",
+    ed_show_note: "Mostrar campo de nota",
+    ed_filter_hint: () =>
+      html`Configura los filtros <code>persons</code>/<code>tasks</code> (listas
+      de IDs) directamente en el YAML si es necesario.`,
+  },
+};
+
+// Sprache aus HA ableiten (Fallback en → de) und Key nachschlagen.
+function translate(hass, key, args) {
+  const lang = (
+    (hass && ((hass.locale && hass.locale.language) || hass.language)) ||
+    "de"
+  ).split("-")[0];
+  const table = STRINGS[lang] || STRINGS.en || STRINGS.de;
+  let v = table[key];
+  if (v === undefined)
+    v = STRINGS.en[key] !== undefined ? STRINGS.en[key] : STRINGS.de[key];
+  return typeof v === "function" ? v(...args) : v;
+}
+
 class HausarbeitClaimCard extends LitElement {
   static get properties() {
     return {
@@ -86,6 +211,10 @@ class HausarbeitClaimCard extends LitElement {
 
   get hass() {
     return this._hass;
+  }
+
+  _t(key, ...args) {
+    return translate(this._hass, key, args);
   }
 
   connectedCallback() {
@@ -178,7 +307,7 @@ class HausarbeitClaimCard extends LitElement {
         this._selectedPerson = null;
       }
     } catch (err) {
-      this._error = "Daten konnten nicht geladen werden.";
+      this._error = this._t("load_error");
     } finally {
       this._loading = false;
     }
@@ -193,7 +322,7 @@ class HausarbeitClaimCard extends LitElement {
     if (!this._hass) return;
     const personId = this._selectedPerson;
     if (!personId) {
-      this._error = "Bitte zuerst eine Person wählen.";
+      this._error = this._t("select_person_first");
       return;
     }
     this._error = null;
@@ -215,7 +344,7 @@ class HausarbeitClaimCard extends LitElement {
       const person = this._persons.find((p) => p.id === personId);
       const pName = person ? person.name : "";
       this._feedback = {
-        text: `${task.name}${pName ? " für " + pName : ""} eingetragen.`,
+        text: this._t("logged", task.name, pName),
         executionId: res && res.execution_id,
       };
       this._note = "";
@@ -226,7 +355,7 @@ class HausarbeitClaimCard extends LitElement {
         this._feedback = null;
       }, 8000);
     } catch (err) {
-      this._error = "Eintragen fehlgeschlagen.";
+      this._error = this._t("log_failed");
     }
   }
 
@@ -238,27 +367,27 @@ class HausarbeitClaimCard extends LitElement {
         type: WS_DELETE_EXECUTION,
         execution_id: id,
       });
-      this._feedback = { text: "Eintrag rückgängig gemacht.", executionId: null };
+      this._feedback = { text: this._t("undone"), executionId: null };
       if (this._fbTimer) clearTimeout(this._fbTimer);
       this._fbTimer = setTimeout(() => {
         this._feedback = null;
       }, 4000);
     } catch (err) {
-      this._error = "Rückgängig fehlgeschlagen.";
+      this._error = this._t("undo_failed");
     }
   }
 
   // --- Render ------------------------------------------------------------- //
   render() {
     if (!this._config) return html``;
-    const title = this._config.title || "Erledigt melden";
+    const title = this._config.title || this._t("title_default");
     const columns = Number(this._config.columns) > 0 ? Number(this._config.columns) : 3;
 
     return html`
       <ha-card .header=${title}>
         <div class="content">
           ${this._loading && !this._loaded
-            ? html`<div class="hint">Lade …</div>`
+            ? html`<div class="hint">${this._t("loading")}</div>`
             : this._renderBody(columns)}
           ${this._error
             ? html`<div class="error" role="alert" aria-live="assertive">
@@ -273,9 +402,9 @@ class HausarbeitClaimCard extends LitElement {
                     ? html`<button
                         class="undo"
                         @click=${this._undo}
-                        aria-label="Letzten Eintrag rückgängig machen"
+                        aria-label=${this._t("undo_last")}
                       >
-                        Rückgängig
+                        ${this._t("undo")}
                       </button>`
                     : ""}
                 `
@@ -288,36 +417,39 @@ class HausarbeitClaimCard extends LitElement {
 
   _renderBody(columns) {
     if (!this._persons.length) {
-      return html`<div class="hint">
-        Keine Personen vorhanden. Bitte in den Hausarbeit-Einstellungen anlegen.
-      </div>`;
+      return html`<div class="hint">${this._t("no_persons")}</div>`;
     }
     if (!this._tasks.length) {
-      return html`<div class="hint">
-        Keine aktiven Aufgaben vorhanden. Bitte in den Hausarbeit-Einstellungen anlegen.
-      </div>`;
+      return html`<div class="hint">${this._t("no_tasks")}</div>`;
     }
 
     const multiPerson = this._persons.length > 1;
     return html`
       ${multiPerson
         ? html`
-            <div class="section-label">Person</div>
-            <div class="persons" role="group" aria-label="Person wählen">
+            <div class="section-label">${this._t("person")}</div>
+            <div
+              class="persons"
+              role="group"
+              aria-label=${this._t("select_person")}
+            >
               ${this._persons.map((p) => this._renderPersonChip(p))}
             </div>
           `
         : ""}
       <div class="section-label">
-        Aufgabe${!multiPerson && this._persons.length === 1
-          ? html` für ${this._persons[0].name}`
-          : ""}
+        ${this._t(
+          "task_heading",
+          !multiPerson && this._persons.length === 1
+            ? this._persons[0].name
+            : ""
+        )}
       </div>
       <div
         class="tasks"
         style="grid-template-columns: repeat(${columns}, 1fr);"
         role="group"
-        aria-label="Aufgabe eintragen"
+        aria-label=${this._t("log_task_group")}
       >
         ${this._tasks.map((t) => this._renderTaskButton(t))}
       </div>
@@ -328,26 +460,26 @@ class HausarbeitClaimCard extends LitElement {
               type="text"
               .value=${this._note}
               @input=${(e) => (this._note = e.target.value)}
-              placeholder="Notiz (optional)"
-              aria-label="Notiz"
+              placeholder=${this._t("note_placeholder")}
+              aria-label=${this._t("note_label")}
             />
           `
         : ""}
       <details class="nachtrag">
-        <summary>Nachtragen (Zeitpunkt setzen)</summary>
+        <summary>${this._t("backdate_summary")}</summary>
         <input
           type="datetime-local"
           .value=${this._customTs}
           @input=${(e) => (this._customTs = e.target.value)}
-          aria-label="Zeitpunkt der Ausführung"
+          aria-label=${this._t("exec_time_label")}
         />
         ${this._customTs
           ? html`<button
               class="clear-ts"
               @click=${() => (this._customTs = "")}
-              aria-label="Zeitpunkt zurücksetzen"
+              aria-label=${this._t("reset_time")}
             >
-              Jetzt verwenden
+              ${this._t("use_now")}
             </button>`
           : ""}
       </details>
@@ -364,7 +496,7 @@ class HausarbeitClaimCard extends LitElement {
         @click=${() => this._selectPerson(p.id)}
         role="checkbox"
         aria-checked=${selected ? "true" : "false"}
-        aria-label=${"Person " + p.name}
+        aria-label=${this._t("person_named", p.name)}
       >
         ${p.icon
           ? html`<ha-icon icon=${p.icon}></ha-icon>`
@@ -381,13 +513,13 @@ class HausarbeitClaimCard extends LitElement {
         class="task-btn"
         ?disabled=${disabled}
         @click=${() => this._claim(t)}
-        aria-label=${"Aufgabe eintragen: " + t.name}
-        title=${disabled ? "Bitte zuerst Person wählen" : t.name}
+        aria-label=${this._t("log_task_named", t.name)}
+        title=${disabled ? this._t("select_person_first_short") : t.name}
       >
         ${t.icon ? html`<ha-icon icon=${t.icon}></ha-icon>` : ""}
         <span class="task-name">${t.name}</span>
         ${t.points && t.points !== 1
-          ? html`<span class="pts">${t.points} P</span>`
+          ? html`<span class="pts">${this._t("points", t.points)}</span>`
           : ""}
       </button>
     `;
@@ -568,6 +700,10 @@ class HausarbeitClaimCardEditor extends LitElement {
     this._config = { ...config };
   }
 
+  _t(key, ...args) {
+    return translate(this.hass, key, args);
+  }
+
   _emit(config) {
     this._config = config;
     this.dispatchEvent(
@@ -596,7 +732,7 @@ class HausarbeitClaimCardEditor extends LitElement {
     return html`
       <div class="form">
         <label>
-          Titel
+          ${this._t("ed_title")}
           <input
             type="text"
             data-key="title"
@@ -605,7 +741,7 @@ class HausarbeitClaimCardEditor extends LitElement {
           />
         </label>
         <label>
-          Spalten
+          ${this._t("ed_columns")}
           <input
             type="number"
             min="1"
@@ -622,12 +758,9 @@ class HausarbeitClaimCardEditor extends LitElement {
             .checked=${!!this._config.show_note}
             @change=${this._valueChanged}
           />
-          Notizfeld anzeigen
+          ${this._t("ed_show_note")}
         </label>
-        <p class="note">
-          Filter <code>persons</code>/<code>tasks</code> (Listen von IDs) bei Bedarf
-          direkt im YAML setzen.
-        </p>
+        <p class="note">${this._t("ed_filter_hint")}</p>
       </div>
     `;
   }

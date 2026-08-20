@@ -13,7 +13,7 @@ from typing import Final
 # --------------------------------------------------------------------------- #
 DOMAIN: Final = "hausarbeit"
 NAME: Final = "Hausarbeit-Tracker"
-VERSION: Final = "0.1.1"   # muss mit manifest.json übereinstimmen (Frontend-Cache-Bust)
+VERSION: Final = "0.1.2"   # muss mit manifest.json übereinstimmen (Frontend-Cache-Bust)
 MANUFACTURER: Final = "hausarbeit"
 MODEL: Final = "Haushalt"
 

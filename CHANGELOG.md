@@ -7,6 +7,15 @@ und dieses Projekt folgt der [Semantischen Versionierung](https://semver.org/lan
 
 ## [Unveröffentlicht]
 
+## [0.1.2] – 2026-08-20
+
+### Added
+
+- **Mehrsprachige Lovelace-Karten**: Alle drei Karten (claim/stats/targets) sind nun
+  in **Deutsch, Englisch und Spanisch** – die Sprache folgt automatisch der
+  Home-Assistant-Nutzersprache (Fallback Englisch → Deutsch). Perioden, Datumsformate
+  und Fortschrittstexte werden lokalisiert.
+
 ## [0.1.1] – 2026-08-20
 
 ### Added
