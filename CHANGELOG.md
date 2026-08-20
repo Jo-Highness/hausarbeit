@@ -7,6 +7,15 @@ und dieses Projekt folgt der [Semantischen Versionierung](https://semver.org/lan
 
 ## [Unveröffentlicht]
 
+## [0.1.3] – 2026-08-20
+
+### Changed
+
+- **Card-Picker mehrsprachig & neutraler**: Name/Beschreibung der drei Karten im
+  Lovelace-Kartenwähler folgen jetzt der Browser-/HA-Sprache (DE/EN/ES, Fallback
+  Englisch). Die `getStubConfig`-Standardtitel sind entfernt – neu hinzugefügte Karten
+  nutzen automatisch den lokalisierten Standardtitel.
+
 ## [0.1.2] – 2026-08-20
 
 ### Added

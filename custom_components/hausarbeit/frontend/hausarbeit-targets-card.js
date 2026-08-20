@@ -145,7 +145,7 @@ class HausarbeitTargetsCard extends LitElement {
   }
 
   static getStubConfig() {
-    return { title: "Soll / Ist" };
+    return {};
   }
 
   static getConfigElement() {
@@ -551,10 +551,20 @@ customElements.define(
 );
 
 window.customCards = window.customCards || [];
-window.customCards.push({
-  type: "hausarbeit-targets-card",
-  name: "Hausarbeit: Soll/Ist",
-  description: "Fortschritt der Hausarbeit-Ziele je Person mit Balken.",
-  preview: true,
-  documentationURL: "https://github.com/Jo-Highness/hausarbeit",
-});
+(() => {
+  // Picker-Text folgt der Browser-/HA-Sprache (statisch beim Laden; Fallback en -> de).
+  const P = {
+    de: { name: "Hausarbeit: Soll/Ist", description: "Fortschritt der Hausarbeit-Ziele je Person mit Balken." },
+    en: { name: "Hausarbeit: Targets", description: "Target vs. actual progress per person, with bars." },
+    es: { name: "Hausarbeit: Objetivos", description: "Progreso objetivo/real por persona, con barras." },
+  };
+  const lang = ((typeof navigator !== "undefined" && navigator.language) || "en").split("-")[0];
+  const t = P[lang] || P.en;
+  window.customCards.push({
+    type: "hausarbeit-targets-card",
+    name: t.name,
+    description: t.description,
+    preview: true,
+    documentationURL: "https://github.com/Jo-Highness/hausarbeit",
+  });
+})();

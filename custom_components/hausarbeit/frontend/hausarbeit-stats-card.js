@@ -173,7 +173,7 @@ class HausarbeitStatsCard extends LitElement {
   }
 
   static getStubConfig() {
-    return { title: "Hausarbeit-Statistik", days: 90, default_view: "ranking" };
+    return { days: 90, default_view: "ranking" };
   }
 
   static getConfigElement() {
@@ -713,11 +713,20 @@ class HausarbeitStatsCardEditor extends LitElement {
 customElements.define("hausarbeit-stats-card-editor", HausarbeitStatsCardEditor);
 
 window.customCards = window.customCards || [];
-window.customCards.push({
-  type: "hausarbeit-stats-card",
-  name: "Hausarbeit: Statistik",
-  description:
-    "Ranking, Aufgaben-Aufschlüsselung und Personen-Summen der Hausarbeit.",
-  preview: true,
-  documentationURL: "https://github.com/Jo-Highness/hausarbeit",
-});
+(() => {
+  // Picker-Text folgt der Browser-/HA-Sprache (statisch beim Laden; Fallback en -> de).
+  const P = {
+    de: { name: "Hausarbeit: Statistik", description: "Ranking, Aufgaben-Aufschlüsselung und Personen-Summen der Hausarbeit." },
+    en: { name: "Hausarbeit: Statistics", description: "Ranking, per-chore breakdown and per-person totals." },
+    es: { name: "Hausarbeit: Estadísticas", description: "Clasificación, desglose por tarea y totales por persona." },
+  };
+  const lang = ((typeof navigator !== "undefined" && navigator.language) || "en").split("-")[0];
+  const t = P[lang] || P.en;
+  window.customCards.push({
+    type: "hausarbeit-stats-card",
+    name: t.name,
+    description: t.description,
+    preview: true,
+    documentationURL: "https://github.com/Jo-Highness/hausarbeit",
+  });
+})();

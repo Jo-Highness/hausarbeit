@@ -188,7 +188,7 @@ class HausarbeitClaimCard extends LitElement {
   }
 
   static getStubConfig() {
-    return { title: "Erledigt melden", show_note: false, columns: 3 };
+    return { show_note: false, columns: 3 };
   }
 
   static getConfigElement() {
@@ -804,10 +804,20 @@ customElements.define("hausarbeit-claim-card-editor", HausarbeitClaimCardEditor)
 
 // --- Registrierung in der Karten-Auswahl ---------------------------------- //
 window.customCards = window.customCards || [];
-window.customCards.push({
-  type: "hausarbeit-claim-card",
-  name: "Hausarbeit: Erledigt melden",
-  description: "Schnelles Eintragen erledigter Hausarbeit (Person + Aufgabe).",
-  preview: true,
-  documentationURL: "https://github.com/Jo-Highness/hausarbeit",
-});
+(() => {
+  // Picker-Text folgt der Browser-/HA-Sprache (statisch beim Laden; Fallback en -> de).
+  const P = {
+    de: { name: "Hausarbeit: Erledigt melden", description: "Schnelles Eintragen erledigter Hausarbeit (Person + Aufgabe)." },
+    en: { name: "Hausarbeit: Log a chore", description: "Quickly log a completed chore (person + task)." },
+    es: { name: "Hausarbeit: Registrar tarea", description: "Registra rápidamente una tarea del hogar (persona + tarea)." },
+  };
+  const lang = ((typeof navigator !== "undefined" && navigator.language) || "en").split("-")[0];
+  const t = P[lang] || P.en;
+  window.customCards.push({
+    type: "hausarbeit-claim-card",
+    name: t.name,
+    description: t.description,
+    preview: true,
+    documentationURL: "https://github.com/Jo-Highness/hausarbeit",
+  });
+})();
