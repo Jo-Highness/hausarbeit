@@ -1,0 +1,134 @@
+{
+  "title": "Hausarbeit-Tracker",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configurar Hausarbeit-Tracker",
+        "description": "Crea el hogar. Gestiona personas, tareas y objetivos después desde las opciones.",
+        "data": { "title": "Nombre del hogar" }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Hausarbeit-Tracker ya está configurado (una entrada por hogar)."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Gestionar Hausarbeit-Tracker",
+        "menu_options": {
+          "settings": "Ajustes",
+          "persons": "Personas",
+          "tasks": "Tareas",
+          "targets": "Objetivos"
+        }
+      },
+      "settings": {
+        "title": "Ajustes",
+        "data": {
+          "week_start": "Inicio de semana",
+          "stats_days": "Periodo de estadísticas (días)"
+        }
+      },
+      "persons": {
+        "title": "Personas",
+        "menu_options": {
+          "person_add": "Añadir persona",
+          "person_edit": "Editar persona",
+          "person_remove": "Eliminar persona"
+        }
+      },
+      "person_add": {
+        "title": "Añadir persona",
+        "data": {
+          "name": "Nombre",
+          "icon": "Icono (mdi)",
+          "color": "Color (opcional)",
+          "ha_person_entity": "Entidad «person» de HA (opcional)"
+        }
+      },
+      "person_edit": { "title": "Seleccionar persona", "data": { "person": "Persona" } },
+      "person_edit_form": {
+        "title": "Editar persona",
+        "data": {
+          "name": "Nombre",
+          "icon": "Icono (mdi)",
+          "color": "Color (opcional)",
+          "ha_person_entity": "Entidad «person» de HA (opcional)"
+        }
+      },
+      "person_remove": {
+        "title": "Eliminar persona",
+        "description": "Se eliminan los objetivos asociados. El registro de ejecuciones se conserva.",
+        "data": { "person": "Persona" }
+      },
+      "tasks": {
+        "title": "Tareas",
+        "menu_options": {
+          "task_add": "Añadir tarea",
+          "task_edit": "Editar tarea",
+          "task_remove": "Eliminar tarea"
+        }
+      },
+      "task_add": {
+        "title": "Añadir tarea",
+        "data": {
+          "name": "Nombre",
+          "icon": "Icono (mdi)",
+          "category": "Categoría (opcional)",
+          "points": "Puntos/peso",
+          "active": "Activa"
+        }
+      },
+      "task_edit": { "title": "Seleccionar tarea", "data": { "task": "Tarea" } },
+      "task_edit_form": {
+        "title": "Editar tarea",
+        "data": {
+          "name": "Nombre",
+          "icon": "Icono (mdi)",
+          "category": "Categoría (opcional)",
+          "points": "Puntos/peso",
+          "active": "Activa"
+        }
+      },
+      "task_remove": {
+        "title": "Eliminar tarea",
+        "description": "Se eliminan los objetivos asociados. El registro de ejecuciones se conserva.",
+        "data": { "task": "Tarea" }
+      },
+      "targets": {
+        "title": "Objetivos",
+        "menu_options": {
+          "target_add": "Añadir/actualizar objetivo",
+          "target_remove": "Eliminar objetivo"
+        }
+      },
+      "target_add": {
+        "title": "Añadir o actualizar objetivo",
+        "description": "La misma combinación de persona, tarea y periodo sobrescribe el objetivo existente.",
+        "data": {
+          "person_id": "Persona",
+          "task_id": "Tarea",
+          "period": "Periodo",
+          "count": "Objetivo por periodo"
+        }
+      },
+      "target_remove": {
+        "title": "Eliminar objetivo",
+        "data": { "target": "Objetivo" }
+      }
+    },
+    "error": { "invalid": "Entrada no válida. Por favor, revísala." },
+    "abort": {
+      "need_person_and_task": "Crea primero al menos una persona y una tarea."
+    }
+  },
+  "selector": {
+    "week_start": {
+      "options": {
+        "0": "Lunes", "1": "Martes", "2": "Miércoles", "3": "Jueves",
+        "4": "Viernes", "5": "Sábado", "6": "Domingo"
+      }
+    }
+  }
+}

@@ -7,6 +7,22 @@ und dieses Projekt folgt der [Semantischen Versionierung](https://semver.org/lan
 
 ## [Unveröffentlicht]
 
+## [0.1.1] – 2026-08-20
+
+### Added
+
+- **Marken-Icon & Logo** der Integration (hell/dunkel) – lokal ausgeliefert über
+  `custom_components/hausarbeit/brand/` (HA Brands-Proxy, ab HA 2026.3.0), erscheint auf
+  der Integrations-/Geräteseite ohne `home-assistant/brands`-PR.
+- **Spanische Übersetzung** der Oberfläche (`translations/es.json`) – die UI gibt es nun
+  in Deutsch, Englisch und Spanisch.
+- Kurzbeschreibung in **Englisch und Spanisch** in README und `info.md`.
+
+### Changed
+
+- Home-Assistant-Mindestversion in der Doku auf **2024.7.0** korrigiert (wegen
+  `StaticPathConfig`).
+
 ## [0.1.0] – 2026-08-19
 
 ### Added

@@ -1,8 +1,19 @@
-# 🧹 Hausarbeit-Tracker
+<p align="center">
+  <img src="custom_components/hausarbeit/brand/logo.png" alt="Hausarbeit-Tracker" width="420">
+</p>
+
+# Hausarbeit-Tracker
 
 Dokumentiere, **wer wann welche Hausarbeit** erledigt hat – mit Statistiken, Ranking und
 **Soll-/Ist-Tracking pro Person**. Komplett lokal (`local_push`), UI-First und ohne
 YAML-Pflicht.
+
+> **🇬🇧 English** — Track **who did which chore, and when**, with statistics, rankings and
+> per-person **target vs. actual** tracking. Fully local, UI-first. UI available in DE / EN / ES.
+>
+> **🇪🇸 Español** — Registra **quién hizo qué tarea del hogar y cuándo**, con estadísticas,
+> clasificaciones y seguimiento de **objetivo frente a real** por persona. Totalmente local,
+> centrado en la interfaz. Interfaz disponible en DE / EN / ES.
 
 ## Highlights
 

@@ -1,14 +1,32 @@
-# 🧹 Hausarbeit-Tracker
+<p align="center">
+  <img src="custom_components/hausarbeit/brand/logo.png" alt="Hausarbeit-Tracker" width="460">
+</p>
+
+# Hausarbeit-Tracker
 
 [![HACS: Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
 [![Validierung](https://img.shields.io/github/actions/workflow/status/Jo-Highness/hausarbeit/validate.yml?style=for-the-badge&label=Validierung)](https://github.com/Jo-Highness/hausarbeit/actions/workflows/validate.yml)
 [![Lizenz: MIT](https://img.shields.io/badge/Lizenz-MIT-green.svg?style=for-the-badge)](./LICENSE)
-[![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2024.4.0%2B-41BDF5.svg?style=for-the-badge&logo=home-assistant&logoColor=white)](https://www.home-assistant.io/)
+[![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2024.7.0%2B-41BDF5.svg?style=for-the-badge&logo=home-assistant&logoColor=white)](https://www.home-assistant.io/)
 
 > Wer hat wann welche Hausarbeit erledigt? Der **Hausarbeit-Tracker** dokumentiert
 > jede erledigte Aufgabe pro Person, führt Statistiken und vergleicht **Soll gegen Ist**
 > je Periode – komplett lokal, ohne Cloud, UI-First und mit drei mitgelieferten
 > Lovelace-Karten.
+
+### 🌍 English / Español
+
+**🇬🇧 English** — *Who did which chore, and when?* The **Hausarbeit-Tracker** logs every
+completed chore per person, provides statistics and rankings, and compares **target vs.
+actual** per period (day / week / month) — fully local, no cloud, UI-first, with three
+bundled Lovelace cards. The user interface ships in German, English and Spanish.
+*(The full documentation below is written in German.)*
+
+**🇪🇸 Español** — *¿Quién hizo qué tarea del hogar y cuándo?* El **Hausarbeit-Tracker**
+registra cada tarea completada por persona, ofrece estadísticas y clasificaciones, y
+compara **objetivo frente a real** por periodo (día / semana / mes) — totalmente local,
+sin nube, centrado en la interfaz y con tres tarjetas Lovelace incluidas. La interfaz
+está disponible en alemán, inglés y español. *(La documentación completa está en alemán.)*
 
 ---
 
