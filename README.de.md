@@ -81,8 +81,7 @@ está disponible en alemán, inglés y español. *(La documentación completa es
 
 ## Screenshots
 
-> ⚠️ **Platzhalter** – die folgenden Bilder sind noch nicht enthalten. Siehe
-> [`images/PLACEHOLDER.md`](./images/PLACEHOLDER.md) für die erwarteten Aufnahmen.
+> Aufgenommen in einem Demo-Home-Assistant mit fiktiven Daten.
 
 | Erledigung loggen | Statistik & Ranking | Soll/Ist-Fortschritt |
 |:---:|:---:|:---:|
