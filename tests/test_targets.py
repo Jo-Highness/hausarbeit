@@ -1,31 +1,32 @@
 """Reine Berechnungslogik (targets.py) — ohne laufendes Home Assistant."""
+
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import pytest
 
 from custom_components.hausarbeit.const import (
-    PERIOD_DAY,
-    PERIOD_WEEK,
-    PERIOD_MONTH,
-    F_ID,
-    F_PERSON_ID,
-    F_TASK_ID,
-    F_PERIOD,
     F_COUNT,
-    F_TIMESTAMP,
+    F_ID,
+    F_PERIOD,
+    F_PERSON_ID,
     F_POINTS,
+    F_TASK_ID,
+    F_TIMESTAMP,
+    PERIOD_DAY,
+    PERIOD_MONTH,
+    PERIOD_WEEK,
 )
 from custom_components.hausarbeit.targets import (
+    count_executions,
+    evaluate_target,
     parse_ts,
-    start_of_day,
     period_bounds,
     previous_period_bounds,
-    count_executions,
+    start_of_day,
     sum_points,
-    evaluate_target,
 )
 
 BERLIN = ZoneInfo("Europe/Berlin")
@@ -44,18 +45,18 @@ def _ex(person, task, ts: datetime):
 # --------------------------------------------------------------------------- #
 def test_parse_ts_z_suffix():
     d = parse_ts("2026-01-01T00:00:00Z")
-    assert d == datetime(2026, 1, 1, tzinfo=timezone.utc)
+    assert d == datetime(2026, 1, 1, tzinfo=UTC)
     assert d.tzinfo is not None
 
 
 def test_parse_ts_offset():
     d = parse_ts("2026-01-01T00:00:00+00:00")
-    assert d == datetime(2026, 1, 1, tzinfo=timezone.utc)
+    assert d == datetime(2026, 1, 1, tzinfo=UTC)
 
 
 def test_parse_ts_naive_becomes_utc():
     d = parse_ts("2026-01-01T12:00:00")
-    assert d.tzinfo is timezone.utc
+    assert d.tzinfo is UTC
 
 
 def test_parse_ts_none_and_empty():
@@ -91,15 +92,15 @@ def test_period_bounds_week_monday_start():
     now = dt(2026, 1, 15, 8, 0)
     assert now.weekday() == 3
     start, end = period_bounds(now, PERIOD_WEEK, week_start=0)
-    assert start == dt(2026, 1, 12, 0, 0)   # Montag
-    assert end == dt(2026, 1, 19, 0, 0)     # Montag darauf, exklusiv
+    assert start == dt(2026, 1, 12, 0, 0)  # Montag
+    assert end == dt(2026, 1, 19, 0, 0)  # Montag darauf, exklusiv
     assert (end - start) == timedelta(days=7)
 
 
 def test_period_bounds_week_sunday_start():
     now = dt(2026, 1, 15, 8, 0)
     start, end = period_bounds(now, PERIOD_WEEK, week_start=6)
-    assert start == dt(2026, 1, 11, 0, 0)   # Sonntag
+    assert start == dt(2026, 1, 11, 0, 0)  # Sonntag
     assert end == dt(2026, 1, 18, 0, 0)
     assert start.weekday() == 6
 
@@ -151,7 +152,7 @@ def test_previous_period_bounds_day():
 def test_previous_period_bounds_week():
     now = dt(2026, 1, 15, 8, 0)
     start, end = previous_period_bounds(now, PERIOD_WEEK, week_start=0)
-    assert start == dt(2026, 1, 5, 0, 0)    # Montag der Vorwoche
+    assert start == dt(2026, 1, 5, 0, 0)  # Montag der Vorwoche
     assert end == dt(2026, 1, 12, 0, 0)
 
 
@@ -170,10 +171,10 @@ def test_count_executions_boundaries():
     end = dt(2026, 1, 16, 0, 0)
     executions = [
         _ex("p1", "t1", start - timedelta(seconds=1)),  # vor start -> raus
-        _ex("p1", "t1", start),                          # genau start -> rein
-        _ex("p1", "t1", dt(2026, 1, 15, 12, 0)),         # mittig -> rein
-        _ex("p1", "t1", end - timedelta(seconds=1)),     # kurz vor end -> rein
-        _ex("p1", "t1", end),                            # genau end -> raus (exklusiv)
+        _ex("p1", "t1", start),  # genau start -> rein
+        _ex("p1", "t1", dt(2026, 1, 15, 12, 0)),  # mittig -> rein
+        _ex("p1", "t1", end - timedelta(seconds=1)),  # kurz vor end -> rein
+        _ex("p1", "t1", end),  # genau end -> raus (exklusiv)
     ]
     assert count_executions(executions, "p1", "t1", start, end) == 3
 

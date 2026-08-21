@@ -1,14 +1,14 @@
 """Gemeinsame Fixtures für die Hausarbeit-Tracker-Tests."""
+
 from __future__ import annotations
 
 import pytest
-
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.hausarbeit.const import (
-    DOMAIN,
-    CONF_WEEK_START,
     CONF_STATS_DAYS,
+    CONF_WEEK_START,
+    DOMAIN,
 )
 
 

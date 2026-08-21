@@ -5,45 +5,50 @@ Options-Flow: Einstellungen (Wochenstart, Statistik-Zeitraum) UND vollständige
 Verwaltung von Personen, Aufgaben und Soll-Vorgaben (anlegen/ändern/entfernen) —
 komplett über die HA-Oberfläche, ohne YAML.
 """
+
 from __future__ import annotations
 
 from typing import Any
 
-import voluptuous as vol
-
 from homeassistant import config_entries
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+import voluptuous as vol
 
 from .const import (
-    DOMAIN,
-    DEFAULT_TITLE,
-    CONF_WEEK_START,
     CONF_STATS_DAYS,
-    DEFAULT_WEEK_START,
+    CONF_WEEK_START,
     DEFAULT_STATS_DAYS,
-    MIN_STATS_DAYS,
-    MAX_STATS_DAYS,
-    PERIODS,
-    PERIOD_WEEK,
+    DEFAULT_TITLE,
+    DEFAULT_WEEK_START,
+    DOMAIN,
+    F_ACTIVE,
+    F_CATEGORY,
+    F_COLOR,
+    F_COUNT,
+    F_HA_PERSON,
+    F_ICON,
     F_ID,
     F_NAME,
-    F_ICON,
-    F_COLOR,
-    F_CATEGORY,
-    F_POINTS,
-    F_ACTIVE,
-    F_HA_PERSON,
-    F_PERSON_ID,
-    F_TASK_ID,
     F_PERIOD,
-    F_COUNT,
+    F_PERSON_ID,
+    F_POINTS,
+    F_TASK_ID,
+    MAX_STATS_DAYS,
+    MIN_STATS_DAYS,
+    PERIOD_WEEK,
+    PERIODS,
 )
 from .coordinator import HausarbeitCoordinator, HausarbeitError
 
 WEEKDAYS = {
-    0: "Montag", 1: "Dienstag", 2: "Mittwoch", 3: "Donnerstag",
-    4: "Freitag", 5: "Samstag", 6: "Sonntag",
+    0: "Montag",
+    1: "Dienstag",
+    2: "Mittwoch",
+    3: "Donnerstag",
+    4: "Freitag",
+    5: "Samstag",
+    6: "Sonntag",
 }
 
 
@@ -98,20 +103,26 @@ class HausarbeitOptionsFlow(config_entries.OptionsFlow):
     # -- Einstellungen -----------------------------------------------------
     async def async_step_settings(self, user_input=None):
         if user_input is not None:
-            return self.async_create_entry(title="", data={
-                CONF_WEEK_START: int(user_input[CONF_WEEK_START]),
-                CONF_STATS_DAYS: int(user_input[CONF_STATS_DAYS]),
-            })
+            return self.async_create_entry(
+                title="",
+                data={
+                    CONF_WEEK_START: int(user_input[CONF_WEEK_START]),
+                    CONF_STATS_DAYS: int(user_input[CONF_STATS_DAYS]),
+                },
+            )
         opts = self.config_entry.options
         return self.async_show_form(
             step_id="settings",
-            data_schema=vol.Schema({
-                vol.Required(CONF_WEEK_START,
-                             default=opts.get(CONF_WEEK_START, DEFAULT_WEEK_START)): vol.In(WEEKDAYS),
-                vol.Required(CONF_STATS_DAYS,
-                             default=opts.get(CONF_STATS_DAYS, DEFAULT_STATS_DAYS)):
-                    vol.All(vol.Coerce(int), vol.Range(min=MIN_STATS_DAYS, max=MAX_STATS_DAYS)),
-            }),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_WEEK_START, default=opts.get(CONF_WEEK_START, DEFAULT_WEEK_START)
+                    ): vol.In(WEEKDAYS),
+                    vol.Required(
+                        CONF_STATS_DAYS, default=opts.get(CONF_STATS_DAYS, DEFAULT_STATS_DAYS)
+                    ): vol.All(vol.Coerce(int), vol.Range(min=MIN_STATS_DAYS, max=MAX_STATS_DAYS)),
+                }
+            ),
         )
 
     # -- Personen ----------------------------------------------------------
@@ -127,7 +138,8 @@ class HausarbeitOptionsFlow(config_entries.OptionsFlow):
         if user_input is not None:
             try:
                 self._coord.add_person(
-                    user_input[F_NAME], icon=user_input.get(F_ICON) or None,
+                    user_input[F_NAME],
+                    icon=user_input.get(F_ICON) or None,
                     color=user_input.get(F_COLOR) or None,
                     ha_person_entity=user_input.get(F_HA_PERSON) or None,
                 )
@@ -137,12 +149,14 @@ class HausarbeitOptionsFlow(config_entries.OptionsFlow):
                 self._err = str(err)
         return self.async_show_form(
             step_id="person_add",
-            data_schema=vol.Schema({
-                vol.Required(F_NAME): cv.string,
-                vol.Optional(F_ICON, default="mdi:account"): cv.string,
-                vol.Optional(F_COLOR, default=""): cv.string,
-                vol.Optional(F_HA_PERSON, default=""): cv.string,
-            }),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(F_NAME): cv.string,
+                    vol.Optional(F_ICON, default="mdi:account"): cv.string,
+                    vol.Optional(F_COLOR, default=""): cv.string,
+                    vol.Optional(F_HA_PERSON, default=""): cv.string,
+                }
+            ),
             errors=errors,
         )
 
@@ -175,12 +189,14 @@ class HausarbeitOptionsFlow(config_entries.OptionsFlow):
             return await self.async_step_persons()
         return self.async_show_form(
             step_id="person_edit_form",
-            data_schema=vol.Schema({
-                vol.Required(F_NAME, default=person.get(F_NAME, "")): cv.string,
-                vol.Optional(F_ICON, default=person.get(F_ICON) or "mdi:account"): cv.string,
-                vol.Optional(F_COLOR, default=person.get(F_COLOR) or ""): cv.string,
-                vol.Optional(F_HA_PERSON, default=person.get(F_HA_PERSON) or ""): cv.string,
-            }),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(F_NAME, default=person.get(F_NAME, "")): cv.string,
+                    vol.Optional(F_ICON, default=person.get(F_ICON) or "mdi:account"): cv.string,
+                    vol.Optional(F_COLOR, default=person.get(F_COLOR) or ""): cv.string,
+                    vol.Optional(F_HA_PERSON, default=person.get(F_HA_PERSON) or ""): cv.string,
+                }
+            ),
         )
 
     async def async_step_person_remove(self, user_input=None):
@@ -206,20 +222,24 @@ class HausarbeitOptionsFlow(config_entries.OptionsFlow):
     async def async_step_task_add(self, user_input=None):
         if user_input is not None:
             self._coord.add_task(
-                user_input[F_NAME], icon=user_input.get(F_ICON) or None,
+                user_input[F_NAME],
+                icon=user_input.get(F_ICON) or None,
                 category=user_input.get(F_CATEGORY) or None,
-                points=user_input.get(F_POINTS), active=user_input.get(F_ACTIVE, True),
+                points=user_input.get(F_POINTS),
+                active=user_input.get(F_ACTIVE, True),
             )
             return await self.async_step_tasks()
         return self.async_show_form(
             step_id="task_add",
-            data_schema=vol.Schema({
-                vol.Required(F_NAME): cv.string,
-                vol.Optional(F_ICON, default="mdi:broom"): cv.string,
-                vol.Optional(F_CATEGORY, default=""): cv.string,
-                vol.Optional(F_POINTS, default=1): vol.Coerce(float),
-                vol.Optional(F_ACTIVE, default=True): cv.boolean,
-            }),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(F_NAME): cv.string,
+                    vol.Optional(F_ICON, default="mdi:broom"): cv.string,
+                    vol.Optional(F_CATEGORY, default=""): cv.string,
+                    vol.Optional(F_POINTS, default=1): vol.Coerce(float),
+                    vol.Optional(F_ACTIVE, default=True): cv.boolean,
+                }
+            ),
         )
 
     async def async_step_task_edit(self, user_input=None):
@@ -252,13 +272,15 @@ class HausarbeitOptionsFlow(config_entries.OptionsFlow):
             return await self.async_step_tasks()
         return self.async_show_form(
             step_id="task_edit_form",
-            data_schema=vol.Schema({
-                vol.Required(F_NAME, default=task.get(F_NAME, "")): cv.string,
-                vol.Optional(F_ICON, default=task.get(F_ICON) or "mdi:broom"): cv.string,
-                vol.Optional(F_CATEGORY, default=task.get(F_CATEGORY) or ""): cv.string,
-                vol.Optional(F_POINTS, default=task.get(F_POINTS, 1)): vol.Coerce(float),
-                vol.Optional(F_ACTIVE, default=task.get(F_ACTIVE, True)): cv.boolean,
-            }),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(F_NAME, default=task.get(F_NAME, "")): cv.string,
+                    vol.Optional(F_ICON, default=task.get(F_ICON) or "mdi:broom"): cv.string,
+                    vol.Optional(F_CATEGORY, default=task.get(F_CATEGORY) or ""): cv.string,
+                    vol.Optional(F_POINTS, default=task.get(F_POINTS, 1)): vol.Coerce(float),
+                    vol.Optional(F_ACTIVE, default=task.get(F_ACTIVE, True)): cv.boolean,
+                }
+            ),
         )
 
     async def async_step_task_remove(self, user_input=None):
@@ -290,20 +312,24 @@ class HausarbeitOptionsFlow(config_entries.OptionsFlow):
             try:
                 # set_target ist ein Upsert: gleiche (Person, Aufgabe, Periode) => Soll ändern
                 self._coord.set_target(
-                    user_input[F_PERSON_ID], user_input[F_TASK_ID],
-                    user_input[F_PERIOD], user_input[F_COUNT],
+                    user_input[F_PERSON_ID],
+                    user_input[F_TASK_ID],
+                    user_input[F_PERIOD],
+                    user_input[F_COUNT],
                 )
                 return await self.async_step_targets()
             except HausarbeitError:
                 errors["base"] = "invalid"
         return self.async_show_form(
             step_id="target_add",
-            data_schema=vol.Schema({
-                vol.Required(F_PERSON_ID): vol.In(persons),
-                vol.Required(F_TASK_ID): vol.In(tasks),
-                vol.Required(F_PERIOD, default=PERIOD_WEEK): vol.In(list(PERIODS)),
-                vol.Required(F_COUNT, default=1): vol.All(vol.Coerce(int), vol.Range(min=1)),
-            }),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(F_PERSON_ID): vol.In(persons),
+                    vol.Required(F_TASK_ID): vol.In(tasks),
+                    vol.Required(F_PERIOD, default=PERIOD_WEEK): vol.In(list(PERIODS)),
+                    vol.Required(F_COUNT, default=1): vol.All(vol.Coerce(int), vol.Range(min=1)),
+                }
+            ),
             errors=errors,
         )
 

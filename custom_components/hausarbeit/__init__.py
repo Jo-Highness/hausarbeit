@@ -4,57 +4,56 @@ Ein Config-Entry pro Haushalt. Registriert Coordinator, Sensor-Plattform, Servic
 die WebSocket-API und liefert die drei Lovelace-Karten automatisch als Frontend-
 Ressource aus (kein separates HACS-Frontend-Paket nötig).
 """
+
 from __future__ import annotations
 
 import logging
 import os
-from datetime import datetime
-
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.config_validation as cv
+import voluptuous as vol
 
+from . import websocket as ws_api
 from .const import (
+    ATTR_EXECUTION_ID,
+    ATTR_TARGET_ID,
     DOMAIN,
-    PLATFORMS,
-    PERIODS,
+    F_ACTIVE,
+    F_CATEGORY,
+    F_COLOR,
+    F_COUNT,
+    F_HA_PERSON,
+    F_ICON,
+    F_ID,
+    F_NAME,
+    F_NOTE,
+    F_PERIOD,
+    F_PERSON_ID,
+    F_POINTS,
+    F_TASK_ID,
+    F_TIMESTAMP,
     FRONTEND_DIR,
     FRONTEND_URL_BASE,
     LOVELACE_CARDS,
-    F_NAME,
-    F_ICON,
-    F_COLOR,
-    F_CATEGORY,
-    F_POINTS,
-    F_ACTIVE,
-    F_HA_PERSON,
-    F_PERSON_ID,
-    F_TASK_ID,
-    F_PERIOD,
-    F_COUNT,
-    F_TIMESTAMP,
-    F_NOTE,
-    F_ID,
-    ATTR_EXECUTION_ID,
-    ATTR_TARGET_ID,
-    SERVICE_LOG_EXECUTION,
-    SERVICE_DELETE_EXECUTION,
-    SERVICE_CORRECT_EXECUTION,
-    SERVICE_ADD_TASK,
-    SERVICE_UPDATE_TASK,
-    SERVICE_REMOVE_TASK,
+    PERIODS,
+    PLATFORMS,
     SERVICE_ADD_PERSON,
-    SERVICE_UPDATE_PERSON,
+    SERVICE_ADD_TASK,
+    SERVICE_CORRECT_EXECUTION,
+    SERVICE_DELETE_EXECUTION,
+    SERVICE_LOG_EXECUTION,
     SERVICE_REMOVE_PERSON,
-    SERVICE_SET_TARGET,
     SERVICE_REMOVE_TARGET,
+    SERVICE_REMOVE_TASK,
+    SERVICE_SET_TARGET,
+    SERVICE_UPDATE_PERSON,
+    SERVICE_UPDATE_TASK,
     VERSION,
 )
 from .coordinator import HausarbeitCoordinator, HausarbeitError
-from . import websocket as ws_api
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,10 +86,17 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if not hass.data[DOMAIN]:
             # letzter Entry -> Services abmelden
             for service in (
-                SERVICE_LOG_EXECUTION, SERVICE_DELETE_EXECUTION, SERVICE_CORRECT_EXECUTION,
-                SERVICE_ADD_TASK, SERVICE_UPDATE_TASK, SERVICE_REMOVE_TASK,
-                SERVICE_ADD_PERSON, SERVICE_UPDATE_PERSON, SERVICE_REMOVE_PERSON,
-                SERVICE_SET_TARGET, SERVICE_REMOVE_TARGET,
+                SERVICE_LOG_EXECUTION,
+                SERVICE_DELETE_EXECUTION,
+                SERVICE_CORRECT_EXECUTION,
+                SERVICE_ADD_TASK,
+                SERVICE_UPDATE_TASK,
+                SERVICE_REMOVE_TASK,
+                SERVICE_ADD_PERSON,
+                SERVICE_UPDATE_PERSON,
+                SERVICE_REMOVE_PERSON,
+                SERVICE_SET_TARGET,
+                SERVICE_REMOVE_TARGET,
             ):
                 if hass.services.has_service(DOMAIN, service):
                     hass.services.async_remove(DOMAIN, service)
@@ -110,8 +116,8 @@ async def _async_register_frontend(hass: HomeAssistant) -> None:
     # Defensiv: scheitert nur, wenn http/frontend nicht verfügbar sind (z. B. in einer
     # minimalen Test-/Headless-Umgebung). In echtem HA ist beides vorhanden.
     try:
-        from homeassistant.components.http import StaticPathConfig
         from homeassistant.components.frontend import add_extra_js_url
+        from homeassistant.components.http import StaticPathConfig
 
         frontend_path = os.path.join(os.path.dirname(__file__), FRONTEND_DIR)
         await hass.http.async_register_static_paths(
@@ -121,7 +127,7 @@ async def _async_register_frontend(hass: HomeAssistant) -> None:
             add_extra_js_url(hass, f"{FRONTEND_URL_BASE}/{filename}?v={VERSION}")
         hass.data[_STATIC_REGISTERED] = True
         _LOGGER.debug("Hausarbeit-Frontend registriert unter %s", FRONTEND_URL_BASE)
-    except Exception as err:  # noqa: BLE001
+    except Exception as err:
         _LOGGER.warning("Frontend-Karten konnten nicht registriert werden: %s", err)
 
 
@@ -130,8 +136,7 @@ async def _async_register_frontend(hass: HomeAssistant) -> None:
 # --------------------------------------------------------------------------- #
 def _first_coordinator(hass: HomeAssistant) -> HausarbeitCoordinator:
     coordinators = [
-        c for c in hass.data.get(DOMAIN, {}).values()
-        if isinstance(c, HausarbeitCoordinator)
+        c for c in hass.data.get(DOMAIN, {}).values() if isinstance(c, HausarbeitCoordinator)
     ]
     if not coordinators:
         raise ServiceValidationError("Hausarbeit-Tracker ist nicht eingerichtet.")
@@ -150,8 +155,10 @@ def _async_register_services(hass: HomeAssistant) -> None:
     def log_execution(call: ServiceCall):
         c = coord()
         ex = c.log_execution(
-            call.data[F_PERSON_ID], call.data[F_TASK_ID],
-            ts=call.data.get(F_TIMESTAMP), note=call.data.get(F_NOTE),
+            call.data[F_PERSON_ID],
+            call.data[F_TASK_ID],
+            ts=call.data.get(F_TIMESTAMP),
+            note=call.data.get(F_NOTE),
         )
         return {ATTR_EXECUTION_ID: ex[F_ID]}
 
@@ -169,14 +176,20 @@ def _async_register_services(hass: HomeAssistant) -> None:
 
     def add_task(call: ServiceCall):
         t = coord().add_task(
-            call.data[F_NAME], icon=call.data.get(F_ICON),
-            category=call.data.get(F_CATEGORY), points=call.data.get(F_POINTS),
+            call.data[F_NAME],
+            icon=call.data.get(F_ICON),
+            category=call.data.get(F_CATEGORY),
+            points=call.data.get(F_POINTS),
             active=call.data.get(F_ACTIVE),
         )
         return {F_ID: t[F_ID]}
 
     def update_task(call: ServiceCall):
-        changes = {k: call.data[k] for k in (F_NAME, F_ICON, F_CATEGORY, F_POINTS, F_ACTIVE) if k in call.data}
+        changes = {
+            k: call.data[k]
+            for k in (F_NAME, F_ICON, F_CATEGORY, F_POINTS, F_ACTIVE)
+            if k in call.data
+        }
         coord().update_task(call.data[F_TASK_ID], **changes)
 
     def remove_task(call: ServiceCall):
@@ -184,13 +197,17 @@ def _async_register_services(hass: HomeAssistant) -> None:
 
     def add_person(call: ServiceCall):
         p = coord().add_person(
-            call.data[F_NAME], icon=call.data.get(F_ICON),
-            color=call.data.get(F_COLOR), ha_person_entity=call.data.get(F_HA_PERSON),
+            call.data[F_NAME],
+            icon=call.data.get(F_ICON),
+            color=call.data.get(F_COLOR),
+            ha_person_entity=call.data.get(F_HA_PERSON),
         )
         return {F_ID: p[F_ID]}
 
     def update_person(call: ServiceCall):
-        changes = {k: call.data[k] for k in (F_NAME, F_ICON, F_COLOR, F_HA_PERSON) if k in call.data}
+        changes = {
+            k: call.data[k] for k in (F_NAME, F_ICON, F_COLOR, F_HA_PERSON) if k in call.data
+        }
         coord().update_person(call.data[F_PERSON_ID], **changes)
 
     def remove_person(call: ServiceCall):
@@ -198,8 +215,10 @@ def _async_register_services(hass: HomeAssistant) -> None:
 
     def set_target(call: ServiceCall):
         t = coord().set_target(
-            call.data[F_PERSON_ID], call.data[F_TASK_ID],
-            call.data[F_PERIOD], call.data[F_COUNT],
+            call.data[F_PERSON_ID],
+            call.data[F_TASK_ID],
+            call.data[F_PERIOD],
+            call.data[F_COUNT],
         )
         return {ATTR_TARGET_ID: t[F_ID]}
 
@@ -214,73 +233,151 @@ def _async_register_services(hass: HomeAssistant) -> None:
                 raise ServiceValidationError(str(err)) from err
             except HomeAssistantError:
                 raise
-            except Exception as err:  # noqa: BLE001
+            except Exception as err:
                 raise HomeAssistantError(str(err)) from err
             return result if returns else None
+
         return handler
 
     from homeassistant.core import SupportsResponse
 
     services = [
-        (SERVICE_LOG_EXECUTION, make(log_execution, True), vol.Schema({
-            vol.Required(F_PERSON_ID): cv.string,
-            vol.Required(F_TASK_ID): cv.string,
-            vol.Optional(F_TIMESTAMP): cv.datetime,
-            vol.Optional(F_NOTE): cv.string,
-        }), SupportsResponse.OPTIONAL),
-        (SERVICE_DELETE_EXECUTION, make(delete_execution), vol.Schema({
-            vol.Required(ATTR_EXECUTION_ID): cv.string,
-        }), SupportsResponse.NONE),
-        (SERVICE_CORRECT_EXECUTION, make(correct_execution), vol.Schema({
-            vol.Required(ATTR_EXECUTION_ID): cv.string,
-            vol.Optional(F_PERSON_ID): cv.string,
-            vol.Optional(F_TASK_ID): cv.string,
-            vol.Optional(F_TIMESTAMP): cv.datetime,
-            vol.Optional(F_NOTE): cv.string,
-        }), SupportsResponse.NONE),
-        (SERVICE_ADD_TASK, make(add_task, True), vol.Schema({
-            vol.Required(F_NAME): cv.string,
-            vol.Optional(F_ICON): cv.string,
-            vol.Optional(F_CATEGORY): cv.string,
-            vol.Optional(F_POINTS): vol.Coerce(float),
-            vol.Optional(F_ACTIVE): cv.boolean,
-        }), SupportsResponse.OPTIONAL),
-        (SERVICE_UPDATE_TASK, make(update_task), vol.Schema({
-            vol.Required(F_TASK_ID): cv.string,
-            vol.Optional(F_NAME): cv.string,
-            vol.Optional(F_ICON): cv.string,
-            vol.Optional(F_CATEGORY): cv.string,
-            vol.Optional(F_POINTS): vol.Coerce(float),
-            vol.Optional(F_ACTIVE): cv.boolean,
-        }), SupportsResponse.NONE),
-        (SERVICE_REMOVE_TASK, make(remove_task), vol.Schema({
-            vol.Required(F_TASK_ID): cv.string,
-        }), SupportsResponse.NONE),
-        (SERVICE_ADD_PERSON, make(add_person, True), vol.Schema({
-            vol.Required(F_NAME): cv.string,
-            vol.Optional(F_ICON): cv.string,
-            vol.Optional(F_COLOR): cv.string,
-            vol.Optional(F_HA_PERSON): cv.string,
-        }), SupportsResponse.OPTIONAL),
-        (SERVICE_UPDATE_PERSON, make(update_person), vol.Schema({
-            vol.Required(F_PERSON_ID): cv.string,
-            vol.Optional(F_NAME): cv.string,
-            vol.Optional(F_ICON): cv.string,
-            vol.Optional(F_COLOR): cv.string,
-            vol.Optional(F_HA_PERSON): cv.string,
-        }), SupportsResponse.NONE),
-        (SERVICE_REMOVE_PERSON, make(remove_person), vol.Schema({
-            vol.Required(F_PERSON_ID): cv.string,
-        }), SupportsResponse.NONE),
-        (SERVICE_SET_TARGET, make(set_target, True), vol.Schema({
-            vol.Required(F_PERSON_ID): cv.string,
-            vol.Required(F_TASK_ID): cv.string,
-            vol.Required(F_PERIOD): vol.In(PERIODS),
-            vol.Required(F_COUNT): vol.All(vol.Coerce(int), vol.Range(min=1)),
-        }), SupportsResponse.OPTIONAL),
-        (SERVICE_REMOVE_TARGET, make(remove_target), vol.Schema({
-            vol.Required(ATTR_TARGET_ID): cv.string,
-        }), SupportsResponse.NONE),
+        (
+            SERVICE_LOG_EXECUTION,
+            make(log_execution, True),
+            vol.Schema(
+                {
+                    vol.Required(F_PERSON_ID): cv.string,
+                    vol.Required(F_TASK_ID): cv.string,
+                    vol.Optional(F_TIMESTAMP): cv.datetime,
+                    vol.Optional(F_NOTE): cv.string,
+                }
+            ),
+            SupportsResponse.OPTIONAL,
+        ),
+        (
+            SERVICE_DELETE_EXECUTION,
+            make(delete_execution),
+            vol.Schema(
+                {
+                    vol.Required(ATTR_EXECUTION_ID): cv.string,
+                }
+            ),
+            SupportsResponse.NONE,
+        ),
+        (
+            SERVICE_CORRECT_EXECUTION,
+            make(correct_execution),
+            vol.Schema(
+                {
+                    vol.Required(ATTR_EXECUTION_ID): cv.string,
+                    vol.Optional(F_PERSON_ID): cv.string,
+                    vol.Optional(F_TASK_ID): cv.string,
+                    vol.Optional(F_TIMESTAMP): cv.datetime,
+                    vol.Optional(F_NOTE): cv.string,
+                }
+            ),
+            SupportsResponse.NONE,
+        ),
+        (
+            SERVICE_ADD_TASK,
+            make(add_task, True),
+            vol.Schema(
+                {
+                    vol.Required(F_NAME): cv.string,
+                    vol.Optional(F_ICON): cv.string,
+                    vol.Optional(F_CATEGORY): cv.string,
+                    vol.Optional(F_POINTS): vol.Coerce(float),
+                    vol.Optional(F_ACTIVE): cv.boolean,
+                }
+            ),
+            SupportsResponse.OPTIONAL,
+        ),
+        (
+            SERVICE_UPDATE_TASK,
+            make(update_task),
+            vol.Schema(
+                {
+                    vol.Required(F_TASK_ID): cv.string,
+                    vol.Optional(F_NAME): cv.string,
+                    vol.Optional(F_ICON): cv.string,
+                    vol.Optional(F_CATEGORY): cv.string,
+                    vol.Optional(F_POINTS): vol.Coerce(float),
+                    vol.Optional(F_ACTIVE): cv.boolean,
+                }
+            ),
+            SupportsResponse.NONE,
+        ),
+        (
+            SERVICE_REMOVE_TASK,
+            make(remove_task),
+            vol.Schema(
+                {
+                    vol.Required(F_TASK_ID): cv.string,
+                }
+            ),
+            SupportsResponse.NONE,
+        ),
+        (
+            SERVICE_ADD_PERSON,
+            make(add_person, True),
+            vol.Schema(
+                {
+                    vol.Required(F_NAME): cv.string,
+                    vol.Optional(F_ICON): cv.string,
+                    vol.Optional(F_COLOR): cv.string,
+                    vol.Optional(F_HA_PERSON): cv.string,
+                }
+            ),
+            SupportsResponse.OPTIONAL,
+        ),
+        (
+            SERVICE_UPDATE_PERSON,
+            make(update_person),
+            vol.Schema(
+                {
+                    vol.Required(F_PERSON_ID): cv.string,
+                    vol.Optional(F_NAME): cv.string,
+                    vol.Optional(F_ICON): cv.string,
+                    vol.Optional(F_COLOR): cv.string,
+                    vol.Optional(F_HA_PERSON): cv.string,
+                }
+            ),
+            SupportsResponse.NONE,
+        ),
+        (
+            SERVICE_REMOVE_PERSON,
+            make(remove_person),
+            vol.Schema(
+                {
+                    vol.Required(F_PERSON_ID): cv.string,
+                }
+            ),
+            SupportsResponse.NONE,
+        ),
+        (
+            SERVICE_SET_TARGET,
+            make(set_target, True),
+            vol.Schema(
+                {
+                    vol.Required(F_PERSON_ID): cv.string,
+                    vol.Required(F_TASK_ID): cv.string,
+                    vol.Required(F_PERIOD): vol.In(PERIODS),
+                    vol.Required(F_COUNT): vol.All(vol.Coerce(int), vol.Range(min=1)),
+                }
+            ),
+            SupportsResponse.OPTIONAL,
+        ),
+        (
+            SERVICE_REMOVE_TARGET,
+            make(remove_target),
+            vol.Schema(
+                {
+                    vol.Required(ATTR_TARGET_ID): cv.string,
+                }
+            ),
+            SupportsResponse.NONE,
+        ),
     ]
 
     for name, handler, schema, response in services:

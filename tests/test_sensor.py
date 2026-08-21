@@ -1,4 +1,5 @@
 """Sensor-Entitäten."""
+
 from __future__ import annotations
 
 from custom_components.hausarbeit.const import PERIOD_WEEK

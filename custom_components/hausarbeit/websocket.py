@@ -4,32 +4,30 @@ Lese-Kommandos (persons/tasks/targets/log/stats) und bequeme Aktions-Kommandos
 (log_execution/delete_execution), plus ein subscribe-Kommando, das bei jeder
 Datenänderung ein {event:"updated"} pusht.
 """
+
 from __future__ import annotations
 
-from typing import Any
-
+from homeassistant.components import websocket_api
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.components import websocket_api
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-
 from .const import (
+    ATTR_EXECUTION_ID,
     DOMAIN,
-    WS_TASKS,
-    WS_PERSONS,
-    WS_TARGETS,
-    WS_LOG,
-    WS_STATS,
-    WS_LOG_EXECUTION,
-    WS_DELETE_EXECUTION,
-    WS_SUBSCRIBE,
+    F_ID,
+    F_NOTE,
     F_PERSON_ID,
     F_TASK_ID,
     F_TIMESTAMP,
-    F_NOTE,
-    F_ID,
-    ATTR_EXECUTION_ID,
+    WS_DELETE_EXECUTION,
+    WS_LOG,
+    WS_LOG_EXECUTION,
+    WS_PERSONS,
+    WS_STATS,
+    WS_SUBSCRIBE,
+    WS_TARGETS,
+    WS_TASKS,
 )
 from .coordinator import HausarbeitCoordinator, HausarbeitError
 
@@ -90,12 +88,14 @@ def ws_targets(hass, connection, msg) -> None:
         connection.send_result(msg["id"], {"targets": coord.evaluate_targets()})
 
 
-@websocket_api.websocket_command({
-    vol.Required("type"): WS_LOG,
-    vol.Optional("limit", default=100): vol.All(int, vol.Range(min=1, max=100000)),
-    vol.Optional(F_PERSON_ID): str,
-    vol.Optional(F_TASK_ID): str,
-})
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): WS_LOG,
+        vol.Optional("limit", default=100): vol.All(int, vol.Range(min=1, max=100000)),
+        vol.Optional(F_PERSON_ID): str,
+        vol.Optional(F_TASK_ID): str,
+    }
+)
 @callback
 def ws_log(hass, connection, msg) -> None:
     coord = _require(hass, connection, msg)
@@ -109,20 +109,24 @@ def ws_log(hass, connection, msg) -> None:
             continue
         if task_id and ex.get(F_TASK_ID) != task_id:
             continue
-        items.append({
-            **ex,
-            "person_name": coord.person_name(ex.get(F_PERSON_ID)),
-            "task_name": coord.task_name(ex.get(F_TASK_ID)),
-        })
+        items.append(
+            {
+                **ex,
+                "person_name": coord.person_name(ex.get(F_PERSON_ID)),
+                "task_name": coord.task_name(ex.get(F_TASK_ID)),
+            }
+        )
     total = len(items)
     items.sort(key=lambda e: e.get(F_TIMESTAMP, ""), reverse=True)
     connection.send_result(msg["id"], {"executions": items[: msg["limit"]], "total": total})
 
 
-@websocket_api.websocket_command({
-    vol.Required("type"): WS_STATS,
-    vol.Optional("days"): vol.All(int, vol.Range(min=1, max=3650)),
-})
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): WS_STATS,
+        vol.Optional("days"): vol.All(int, vol.Range(min=1, max=3650)),
+    }
+)
 @callback
 def ws_stats(hass, connection, msg) -> None:
     coord = _require(hass, connection, msg)
@@ -130,13 +134,15 @@ def ws_stats(hass, connection, msg) -> None:
         connection.send_result(msg["id"], coord.build_stats(msg.get("days")))
 
 
-@websocket_api.websocket_command({
-    vol.Required("type"): WS_LOG_EXECUTION,
-    vol.Required(F_PERSON_ID): str,
-    vol.Required(F_TASK_ID): str,
-    vol.Optional(F_TIMESTAMP): str,
-    vol.Optional(F_NOTE): str,
-})
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): WS_LOG_EXECUTION,
+        vol.Required(F_PERSON_ID): str,
+        vol.Required(F_TASK_ID): str,
+        vol.Optional(F_TIMESTAMP): str,
+        vol.Optional(F_NOTE): str,
+    }
+)
 @callback
 def ws_log_execution(hass, connection, msg) -> None:
     coord = _require(hass, connection, msg)
@@ -144,8 +150,10 @@ def ws_log_execution(hass, connection, msg) -> None:
         return
     try:
         ex = coord.log_execution(
-            msg[F_PERSON_ID], msg[F_TASK_ID],
-            ts=msg.get(F_TIMESTAMP), note=msg.get(F_NOTE),
+            msg[F_PERSON_ID],
+            msg[F_TASK_ID],
+            ts=msg.get(F_TIMESTAMP),
+            note=msg.get(F_NOTE),
         )
     except HausarbeitError as err:
         connection.send_error(msg["id"], "invalid_input", str(err))
@@ -153,10 +161,12 @@ def ws_log_execution(hass, connection, msg) -> None:
     connection.send_result(msg["id"], {ATTR_EXECUTION_ID: ex[F_ID], "execution": ex})
 
 
-@websocket_api.websocket_command({
-    vol.Required("type"): WS_DELETE_EXECUTION,
-    vol.Required(ATTR_EXECUTION_ID): str,
-})
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): WS_DELETE_EXECUTION,
+        vol.Required(ATTR_EXECUTION_ID): str,
+    }
+)
 @callback
 def ws_delete_execution(hass, connection, msg) -> None:
     coord = _require(hass, connection, msg)

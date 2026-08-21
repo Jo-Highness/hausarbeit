@@ -5,22 +5,22 @@ Das Ausführungs-Log kann groß werden, daher wird effizient (debounced) gespeic
 und der Event-Loop nie blockiert. Diese Klasse hält die Daten im Speicher und bietet
 CRUD-Operationen; die *fachliche* Logik (Perioden/Statistik) liegt in targets.py.
 """
+
 from __future__ import annotations
 
 import uuid
-from typing import Any
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
 from .const import (
     STORAGE_KEY,
-    STORAGE_VERSION,
     STORAGE_MINOR_VERSION,
-    STORE_PERSONS,
-    STORE_TASKS,
-    STORE_TARGETS,
+    STORAGE_VERSION,
     STORE_EXECUTIONS,
+    STORE_PERSONS,
+    STORE_TARGETS,
+    STORE_TASKS,
 )
 
 SAVE_DELAY = 2  # Sekunden Debounce für Schreibvorgänge

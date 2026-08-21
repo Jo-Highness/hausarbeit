@@ -1,21 +1,19 @@
 """Config- und Options-Flow."""
+
 from __future__ import annotations
 
-import pytest
-
 from homeassistant.data_entry_flow import FlowResultType
-
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.hausarbeit.const import (
-    DOMAIN,
-    CONF_WEEK_START,
     CONF_STATS_DAYS,
+    CONF_WEEK_START,
+    DOMAIN,
+    F_COUNT,
     F_NAME,
+    F_PERIOD,
     F_PERSON_ID,
     F_TASK_ID,
-    F_PERIOD,
-    F_COUNT,
     PERIOD_WEEK,
 )
 
@@ -24,13 +22,9 @@ from custom_components.hausarbeit.const import (
 # Config-Flow
 # --------------------------------------------------------------------------- #
 async def test_config_flow_creates_entry(hass):
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
-    )
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
     assert result["type"] == FlowResultType.FORM
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"title": "Zuhause"}
-    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {"title": "Zuhause"})
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["options"][CONF_WEEK_START] == 0
     assert result["options"][CONF_STATS_DAYS] == 90
@@ -39,9 +33,7 @@ async def test_config_flow_creates_entry(hass):
 async def test_config_flow_single_instance(hass):
     existing = MockConfigEntry(domain=DOMAIN, options={})
     existing.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
-    )
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
@@ -50,9 +42,7 @@ async def test_config_flow_single_instance(hass):
 # Options-Flow
 # --------------------------------------------------------------------------- #
 async def _menu(hass, flow_id, next_step):
-    return await hass.config_entries.options.async_configure(
-        flow_id, {"next_step_id": next_step}
-    )
+    return await hass.config_entries.options.async_configure(flow_id, {"next_step_id": next_step})
 
 
 async def test_options_settings(setup_integration, hass):
@@ -77,9 +67,7 @@ async def test_options_person_add(setup_integration, hass):
     assert result["type"] == FlowResultType.MENU
     result = await _menu(hass, result["flow_id"], "person_add")
     assert result["type"] == FlowResultType.FORM
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {F_NAME: "Hans"}
-    )
+    result = await hass.config_entries.options.async_configure(result["flow_id"], {F_NAME: "Hans"})
     # kehrt ins Personen-Menü zurück
     assert result["type"] == FlowResultType.MENU
     names = [p[F_NAME] for p in coordinator.store.persons]

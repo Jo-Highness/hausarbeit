@@ -5,10 +5,11 @@ Personen/Aufgaben/Soll-Vorgaben) und baut Soll-/Ist- sowie Statistik-Auswertunge
 Bei jeder Änderung wird ein Dispatcher-Signal gesendet, damit Sensoren und die
 Lovelace-Karten (WebSocket-Subscriber) sich aktualisieren.
 """
+
 from __future__ import annotations
 
-import logging
 from datetime import datetime, timedelta
+import logging
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -18,46 +19,45 @@ from homeassistant.util import dt as dt_util
 
 from . import store as store_mod
 from .const import (
-    DOMAIN,
-    SIGNAL_UPDATE,
-    EVENT_EXECUTION_LOGGED,
-    STORE_PERSONS,
-    STORE_TASKS,
-    STORE_TARGETS,
-    STORE_EXECUTIONS,
-    ID_PREFIX_PERSON,
-    ID_PREFIX_TASK,
-    ID_PREFIX_TARGET,
-    ID_PREFIX_EXECUTION,
-    CONF_WEEK_START,
     CONF_STATS_DAYS,
-    DEFAULT_WEEK_START,
+    CONF_WEEK_START,
     DEFAULT_STATS_DAYS,
-    PERIODS,
-    PERIOD_MONTH,
+    DEFAULT_WEEK_START,
+    EVENT_EXECUTION_LOGGED,
+    F_ACTIVE,
+    F_CATEGORY,
+    F_COLOR,
+    F_COUNT,
+    F_CREATED,
+    F_HA_PERSON,
+    F_ICON,
     F_ID,
     F_NAME,
-    F_ICON,
-    F_COLOR,
-    F_CATEGORY,
-    F_POINTS,
-    F_ACTIVE,
-    F_HA_PERSON,
-    F_CREATED,
-    F_PERSON_ID,
-    F_TASK_ID,
-    F_PERIOD,
-    F_COUNT,
-    F_TIMESTAMP,
     F_NOTE,
+    F_PERIOD,
+    F_PERSON_ID,
+    F_POINTS,
+    F_TASK_ID,
+    F_TIMESTAMP,
+    ID_PREFIX_EXECUTION,
+    ID_PREFIX_PERSON,
+    ID_PREFIX_TARGET,
+    ID_PREFIX_TASK,
+    PERIOD_MONTH,
+    PERIODS,
+    SIGNAL_UPDATE,
+    STORE_EXECUTIONS,
+    STORE_PERSONS,
+    STORE_TARGETS,
+    STORE_TASKS,
 )
 from .targets import (
-    evaluate_target,
     count_executions,
-    sum_points,
-    period_bounds,
+    evaluate_target,
     parse_ts,
+    period_bounds,
     start_of_day,
+    sum_points,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -112,8 +112,13 @@ class HausarbeitCoordinator:
     # ------------------------------------------------------------------ #
     # Personen
     # ------------------------------------------------------------------ #
-    def add_person(self, name: str, icon: str | None = None, color: str | None = None,
-                   ha_person_entity: str | None = None) -> dict:
+    def add_person(
+        self,
+        name: str,
+        icon: str | None = None,
+        color: str | None = None,
+        ha_person_entity: str | None = None,
+    ) -> dict:
         if not name or not str(name).strip():
             raise HausarbeitError("Name der Person darf nicht leer sein.")
         person = {
@@ -148,8 +153,14 @@ class HausarbeitCoordinator:
     # ------------------------------------------------------------------ #
     # Aufgaben
     # ------------------------------------------------------------------ #
-    def add_task(self, name: str, icon: str | None = None, category: str | None = None,
-                 points: float | None = None, active: bool | None = None) -> dict:
+    def add_task(
+        self,
+        name: str,
+        icon: str | None = None,
+        category: str | None = None,
+        points: float | None = None,
+        active: bool | None = None,
+    ) -> dict:
         if not name or not str(name).strip():
             raise HausarbeitError("Name der Aufgabe darf nicht leer sein.")
         task = {
@@ -193,21 +204,24 @@ class HausarbeitCoordinator:
             raise HausarbeitError(f"Ungültiger Perioden-Typ: {period}")
         try:
             count = int(count)
-        except (TypeError, ValueError):
-            raise HausarbeitError("count muss eine ganze Zahl sein.")
+        except (TypeError, ValueError) as err:
+            raise HausarbeitError("count muss eine ganze Zahl sein.") from err
         if count <= 0:
             raise HausarbeitError("count muss größer als 0 sein.")
 
         existing = next(
-            (t for t in self.store.targets
-             if t.get(F_PERSON_ID) == person_id
-             and t.get(F_TASK_ID) == task_id
-             and t.get(F_PERIOD) == period),
+            (
+                t
+                for t in self.store.targets
+                if t.get(F_PERSON_ID) == person_id
+                and t.get(F_TASK_ID) == task_id
+                and t.get(F_PERIOD) == period
+            ),
             None,
         )
         if existing is not None:
             existing[F_COUNT] = count
-            self.store._schedule_save()  # noqa: SLF001 - interne Persistenz
+            self.store._schedule_save()
             self._notify()
             return existing
 
@@ -241,8 +255,9 @@ class HausarbeitCoordinator:
             raise HausarbeitError(f"Ungültiger Zeitstempel: {ts!r}")
         return parsed.isoformat()
 
-    def log_execution(self, person_id: str, task_id: str, ts: Any = None,
-                      note: str | None = None) -> dict:
+    def log_execution(
+        self, person_id: str, task_id: str, ts: Any = None, note: str | None = None
+    ) -> dict:
         if self.store.get_person(person_id) is None:
             raise HausarbeitError(f"Person {person_id} nicht gefunden.")
         if self.store.get_task(task_id) is None:
@@ -274,9 +289,14 @@ class HausarbeitCoordinator:
             raise HausarbeitError(f"Ausführung {execution_id} nicht gefunden.")
         self._notify()
 
-    def correct_execution(self, execution_id: str, person_id: str | None = None,
-                          task_id: str | None = None, ts: Any = None,
-                          note: str | None = None) -> dict:
+    def correct_execution(
+        self,
+        execution_id: str,
+        person_id: str | None = None,
+        task_id: str | None = None,
+        ts: Any = None,
+        note: str | None = None,
+    ) -> dict:
         execution = self.store.get_execution(execution_id)
         if execution is None:
             raise HausarbeitError(f"Ausführung {execution_id} nicht gefunden.")
@@ -292,7 +312,7 @@ class HausarbeitCoordinator:
             execution[F_TIMESTAMP] = self._normalize_ts(ts)
         if note is not None:
             execution[F_NOTE] = str(note).strip()
-        self.store._schedule_save()  # noqa: SLF001
+        self.store._schedule_save()
         self._notify()
         return execution
 
@@ -309,8 +329,9 @@ class HausarbeitCoordinator:
             out.append(ev)
         return out
 
-    def person_breakdown(self, person_id: str, start: datetime | None,
-                         end: datetime | None) -> dict[str, int]:
+    def person_breakdown(
+        self, person_id: str, start: datetime | None, end: datetime | None
+    ) -> dict[str, int]:
         """Aufschlüsselung {task_name: anzahl} für eine Person im Zeitfenster."""
         result: dict[str, int] = {}
         for ex in self.store.executions:
@@ -365,13 +386,17 @@ class HausarbeitCoordinator:
         for person in self.store.persons:
             pid = person[F_ID]
             cnt = person_counts[pid]
-            ranking.append({
-                F_PERSON_ID: pid,
-                "person_name": person.get(F_NAME, pid),
-                "count": cnt,
-                "points": round(person_points[pid], 1),
-                "share_percent": round((cnt / total_in_window) * 100, 1) if total_in_window else 0.0,
-            })
+            ranking.append(
+                {
+                    F_PERSON_ID: pid,
+                    "person_name": person.get(F_NAME, pid),
+                    "count": cnt,
+                    "points": round(person_points[pid], 1),
+                    "share_percent": round((cnt / total_in_window) * 100, 1)
+                    if total_in_window
+                    else 0.0,
+                }
+            )
         ranking.sort(key=lambda r: (r["count"], r["points"]), reverse=True)
 
         per_task = []
@@ -384,27 +409,33 @@ class HausarbeitCoordinator:
                 c = count_executions(ex, pid, tid, start, None)
                 task_total += c
                 if c:
-                    per_person.append({
-                        F_PERSON_ID: pid,
-                        "person_name": person.get(F_NAME, pid),
-                        "count": c,
-                    })
-            per_task.append({
-                F_TASK_ID: tid,
-                "task_name": task.get(F_NAME, tid),
-                "count": task_total,
-                "per_person": per_person,
-            })
+                    per_person.append(
+                        {
+                            F_PERSON_ID: pid,
+                            "person_name": person.get(F_NAME, pid),
+                            "count": c,
+                        }
+                    )
+            per_task.append(
+                {
+                    F_TASK_ID: tid,
+                    "task_name": task.get(F_NAME, tid),
+                    "count": task_total,
+                    "per_person": per_person,
+                }
+            )
         per_task.sort(key=lambda t: t["count"], reverse=True)
 
         per_person = []
         for person in self.store.persons:
             windows = self.person_windows(person[F_ID], now)
-            per_person.append({
-                F_PERSON_ID: person[F_ID],
-                "person_name": person.get(F_NAME, person[F_ID]),
-                **windows,
-            })
+            per_person.append(
+                {
+                    F_PERSON_ID: person[F_ID],
+                    "person_name": person.get(F_NAME, person[F_ID]),
+                    **windows,
+                }
+            )
 
         return {
             "days": days,

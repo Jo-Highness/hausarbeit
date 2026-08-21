@@ -1,20 +1,19 @@
 """Persistenter Store: Migration und robustes Laden."""
-from __future__ import annotations
 
-import pytest
+from __future__ import annotations
 
 from custom_components.hausarbeit.const import (
     STORAGE_KEY,
-    STORAGE_VERSION,
     STORAGE_MINOR_VERSION,
-    STORE_PERSONS,
-    STORE_TASKS,
-    STORE_TARGETS,
+    STORAGE_VERSION,
     STORE_EXECUTIONS,
+    STORE_PERSONS,
+    STORE_TARGETS,
+    STORE_TASKS,
 )
 from custom_components.hausarbeit.store import (
-    HausarbeitStore,
     HausarbeitMigratableStore,
+    HausarbeitStore,
     new_id,
 )
 

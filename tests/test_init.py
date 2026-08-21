@@ -1,26 +1,26 @@
 """Setup, Service-Registrierung und Service-Aufrufe end-to-end."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.util import dt as dt_util
 import pytest
 import voluptuous as vol
 
-from homeassistant.exceptions import ServiceValidationError
-from homeassistant.util import dt as dt_util
-
 from custom_components.hausarbeit.const import (
-    DOMAIN,
-    F_PERSON_ID,
-    F_TASK_ID,
-    F_NAME,
-    F_PERIOD,
-    F_COUNT,
-    F_ID,
-    F_TIMESTAMP,
-    PERIOD_WEEK,
     ATTR_EXECUTION_ID,
     ATTR_TARGET_ID,
+    DOMAIN,
+    F_COUNT,
+    F_ID,
+    F_NAME,
+    F_PERIOD,
+    F_PERSON_ID,
+    F_TASK_ID,
+    F_TIMESTAMP,
+    PERIOD_WEEK,
 )
 from custom_components.hausarbeit.coordinator import (
     HausarbeitCoordinator,
@@ -119,13 +119,9 @@ async def test_set_target_delete_and_correct_flow(setup_integration, hass):
         DOMAIN, "remove_target", {ATTR_TARGET_ID: tgt[ATTR_TARGET_ID]}, blocking=True
     )
     assert len(coordinator.store.targets) == 0
-    await hass.services.async_call(
-        DOMAIN, "remove_task", {F_TASK_ID: t[F_ID]}, blocking=True
-    )
+    await hass.services.async_call(DOMAIN, "remove_task", {F_TASK_ID: t[F_ID]}, blocking=True)
     assert coordinator.store.get_task(t[F_ID]) is None
-    await hass.services.async_call(
-        DOMAIN, "remove_person", {F_PERSON_ID: p[F_ID]}, blocking=True
-    )
+    await hass.services.async_call(DOMAIN, "remove_person", {F_PERSON_ID: p[F_ID]}, blocking=True)
     assert coordinator.store.get_person(p[F_ID]) is None
 
 

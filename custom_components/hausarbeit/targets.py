@@ -6,21 +6,22 @@ Ausführungs-Zeitstempel werden als ISO-8601 (UTC, "Z") gespeichert; Perioden-Gr
 werden in der lokalen HA-Zeitzone gebildet — der Vergleich funktioniert korrekt, weil
 Python aware-datetimes zeitzonenübergreifend vergleicht.
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from .const import (
-    PERIOD_DAY,
-    PERIOD_WEEK,
-    PERIOD_MONTH,
-    F_ID,
-    F_PERSON_ID,
-    F_TASK_ID,
-    F_PERIOD,
     F_COUNT,
-    F_TIMESTAMP,
+    F_ID,
+    F_PERIOD,
+    F_PERSON_ID,
     F_POINTS,
+    F_TASK_ID,
+    F_TIMESTAMP,
+    PERIOD_DAY,
+    PERIOD_MONTH,
+    PERIOD_WEEK,
 )
 
 
@@ -34,7 +35,7 @@ def parse_ts(value: str) -> datetime | None:
     except (ValueError, TypeError):
         return None
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
+        dt = dt.replace(tzinfo=UTC)
     return dt
 
 
@@ -144,9 +145,7 @@ def evaluate_target(
     period = target.get(F_PERIOD, PERIOD_WEEK)
     count = int(target.get(F_COUNT, 0) or 0)
     start, end = period_bounds(now, period, week_start)
-    ist = count_executions(
-        executions, target.get(F_PERSON_ID), target.get(F_TASK_ID), start, end
-    )
+    ist = count_executions(executions, target.get(F_PERSON_ID), target.get(F_TASK_ID), start, end)
     rest = max(0, count - ist)
     percent = round((ist / count) * 100, 1) if count > 0 else 100.0
 

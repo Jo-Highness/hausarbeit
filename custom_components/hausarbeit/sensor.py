@@ -5,11 +5,12 @@ pro Soll-Vorgabe ein Sensor (Ist der laufenden Periode + Soll/Rest/Erfüllungsgr
 pro Aufgabe ein „zuletzt erledigt"-Sensor. Entitäten werden bei Datenänderungen
 (Signal) hinzugefügt/entfernt — kein Neustart nötig.
 """
+
 from __future__ import annotations
 
 from datetime import timedelta
 
-from homeassistant.components.sensor import SensorEntity, SensorStateClass, SensorDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
@@ -19,16 +20,15 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     DOMAIN,
-    NAME,
-    MANUFACTURER,
-    MODEL,
-    VERSION,
-    F_ID,
-    F_NAME,
     F_ICON,
+    F_ID,
     F_PERIOD,
     F_PERSON_ID,
     F_TASK_ID,
+    MANUFACTURER,
+    MODEL,
+    NAME,
+    VERSION,
 )
 from .coordinator import HausarbeitCoordinator
 from .targets import parse_ts
@@ -122,14 +122,17 @@ class PersonSensor(_BaseSensor):
 
     @property
     def native_value(self) -> int:
-        now = self.coordinator._now()  # noqa: SLF001
+        now = self.coordinator._now()
         start = now - timedelta(days=self.coordinator.stats_days)
         from .targets import count_executions
-        return count_executions(self.coordinator.store.executions, self._person_id, None, start, None)
+
+        return count_executions(
+            self.coordinator.store.executions, self._person_id, None, start, None
+        )
 
     @property
     def extra_state_attributes(self) -> dict:
-        now = self.coordinator._now()  # noqa: SLF001
+        now = self.coordinator._now()
         start = now - timedelta(days=self.coordinator.stats_days)
         windows = self.coordinator.person_windows(self._person_id, now)
         return {
@@ -157,9 +160,12 @@ class TargetSensor(_BaseSensor):
         if target is None:
             return None
         from .targets import evaluate_target
+
         ev = evaluate_target(
-            target, self.coordinator.store.executions,
-            self.coordinator._now(), self.coordinator.week_start,  # noqa: SLF001
+            target,
+            self.coordinator.store.executions,
+            self.coordinator._now(),
+            self.coordinator.week_start,
         )
         ev["person_name"] = self.coordinator.person_name(target.get(F_PERSON_ID))
         ev["task_name"] = self.coordinator.task_name(target.get(F_TASK_ID))
