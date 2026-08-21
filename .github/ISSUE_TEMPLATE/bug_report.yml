@@ -1,0 +1,88 @@
+name: Bug report
+description: Report a problem with the Hausarbeit-Tracker integration or its cards
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report! Please fill in as much
+        of the information below as you can — it helps us reproduce and fix the
+        issue faster.
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I am running the latest released version of Hausarbeit-Tracker.
+          required: true
+        - label: I searched the existing issues and did not find a duplicate.
+          required: true
+        - label: This is a bug report, not a feature request or a question.
+          required: true
+  - type: input
+    id: ha_version
+    attributes:
+      label: Home Assistant version
+      description: Settings → About (e.g. 2026.8.0)
+      placeholder: "2026.8.0"
+    validations:
+      required: true
+  - type: input
+    id: integration_version
+    attributes:
+      label: Integration version
+      description: Version of Hausarbeit-Tracker (e.g. 0.1.3)
+      placeholder: "0.1.3"
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser
+      description: Relevant if the bug is in one of the Lovelace cards (e.g. Chrome 128, Firefox 130, Safari on iOS).
+      placeholder: "Chrome 128 / Firefox 130 / Safari iOS"
+    validations:
+      required: false
+  - type: textarea
+    id: what_happened
+    attributes:
+      label: What happened?
+      description: Describe the bug and, if you can, the steps to reproduce it.
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. See error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen instead?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What actually happened?
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Debug logs
+      description: |
+        Enable debug logging by adding the following to your `configuration.yaml`,
+        restarting Home Assistant, reproducing the issue, and pasting the relevant
+        log lines here.
+
+        ```yaml
+        logger:
+          default: warning
+          logs:
+            custom_components.hausarbeit: debug
+        ```
+      render: text
+    validations:
+      required: false
