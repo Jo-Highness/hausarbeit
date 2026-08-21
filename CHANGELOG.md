@@ -7,6 +7,21 @@ und dieses Projekt folgt der [Semantischen Versionierung](https://semver.org/lan
 
 ## [Unveröffentlicht]
 
+### Added
+
+- **Projekt-Governance & Community-Dateien** für HACS-Reife: `CONTRIBUTING.md`,
+  `SECURITY.md`, `CODE_OF_CONDUCT.md` (Contributor Covenant v2.1), Issue-Vorlagen
+  (Bug/Feature) und `config.yml`, `PULL_REQUEST_TEMPLATE.md`.
+- **Ruff-Konfiguration** sowie ein Lint-/Format-Durchlauf (`ruff check`,
+  `ruff format`) über den Python-Code.
+- **CI-Automatisierung**: Ruff-Job in der CI, `dependabot.yml` (wöchentlich,
+  GitHub-Actions), `release-drafter.yml` (Konfiguration + Workflow).
+
+### Changed
+
+- **README auf Englisch als Primärsprache** umgestellt; die deutsche Fassung liegt
+  nun in `README.de.md`.
+
 ## [0.1.3] – 2026-08-20
 
 ### Changed
