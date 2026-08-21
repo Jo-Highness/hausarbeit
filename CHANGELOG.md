@@ -20,7 +20,18 @@ und dieses Projekt folgt der [Semantischen Versionierung](https://semver.org/lan
 ### Changed
 
 - **README auf Englisch als Primärsprache** umgestellt; die deutsche Fassung liegt
-  nun in `README.de.md`.
+  nun in `README.de.md`. Echte Screenshots (die drei Lovelace-Karten, Config-Flow,
+  Entitäten) aus einer Demo-Instanz ergänzt.
+
+### Fixed
+
+- **Lovelace-Karten luden auf aktuellem Home Assistant nicht mehr** ("Configuration
+  error"). Zwei Ursachen behoben: (1) `frontend` ist jetzt eine harte `dependency`
+  (statt nur `after_dependencies`), damit die Auto-Registrierung der Karten-Module
+  nicht mehr an `frontend_extra_module_url` scheitert; (2) die Karten holten `html`/
+  `css` über `hui-view.prototype`, das aktuelle HA-Versionen nicht mehr bereitstellen –
+  die Definition wird nun verzögert, bis eine Lit-fähige Basis (`ha-panel-lovelace` /
+  `hui-masonry-view` / `ha-card`) verfügbar ist. Verifiziert in HA 2026.8.
 
 ## [0.1.3] – 2026-08-20
 

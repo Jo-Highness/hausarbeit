@@ -12,12 +12,22 @@
  */
 
 // --- HA-eigenes Lit wiederverwenden (Pflicht-Pattern) --------------------- //
-const LitElement =
-  customElements.get("ha-panel-lovelace") !== undefined
-    ? Object.getPrototypeOf(customElements.get("ha-panel-lovelace"))
-    : Object.getPrototypeOf(customElements.get("hui-view"));
-const html = LitElement.prototype.html;
-const css = LitElement.prototype.css;
+// Home Assistant no longer exposes html/css on hui-view.prototype, and this
+// module can load before the core Lit elements are defined. Defer the whole card
+// definition until an element that DOES expose Lit (ha-panel-lovelace /
+// hui-masonry-view / ha-card) is available, then read html/css from it.
+async function _haInit() {
+  let LitElement;
+  for (let _i = 0; _i < 600 && !LitElement; _i++) {
+    for (const n of ["ha-panel-lovelace", "hui-masonry-view", "ha-card"]) {
+      const el = customElements.get(n);
+      const proto = el && Object.getPrototypeOf(el);
+      if (proto && proto.prototype && typeof proto.prototype.html === "function") { LitElement = proto; break; }
+    }
+    if (!LitElement) await new Promise((r) => setTimeout(r, 50));
+  }
+  const html = LitElement.prototype.html;
+  const css = LitElement.prototype.css;
 
 // --- WebSocket-Befehle (müssen exakt const.py entsprechen) ---------------- //
 const WS_PERSONS = "hausarbeit/persons";
@@ -821,3 +831,6 @@ window.customCards = window.customCards || [];
     documentationURL: "https://github.com/Jo-Highness/hausarbeit",
   });
 })();
+
+}
+_haInit();

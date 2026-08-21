@@ -11,7 +11,7 @@ import logging
 import os
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
@@ -113,22 +113,39 @@ async def _async_register_frontend(hass: HomeAssistant) -> None:
     """Karten-JS als statische Ressource ausliefern + automatisch laden."""
     if hass.data.get(_STATIC_REGISTERED):
         return
-    # Defensiv: scheitert nur, wenn http/frontend nicht verfügbar sind (z. B. in einer
-    # minimalen Test-/Headless-Umgebung). In echtem HA ist beides vorhanden.
+    # Statische Auslieferung sofort registrieren (http ist eine harte Dependency).
+    # Defensiv: scheitert nur in einer minimalen Test-/Headless-Umgebung ohne http.
     try:
-        from homeassistant.components.frontend import add_extra_js_url
         from homeassistant.components.http import StaticPathConfig
 
         frontend_path = os.path.join(os.path.dirname(__file__), FRONTEND_DIR)
         await hass.http.async_register_static_paths(
             [StaticPathConfig(FRONTEND_URL_BASE, frontend_path, cache_headers=False)]
         )
-        for filename, _card_type in LOVELACE_CARDS:
-            add_extra_js_url(hass, f"{FRONTEND_URL_BASE}/{filename}?v={VERSION}")
         hass.data[_STATIC_REGISTERED] = True
-        _LOGGER.debug("Hausarbeit-Frontend registriert unter %s", FRONTEND_URL_BASE)
     except Exception as err:
-        _LOGGER.warning("Frontend-Karten konnten nicht registriert werden: %s", err)
+        _LOGGER.warning("Hausarbeit-Frontend-Pfad nicht registrierbar: %s", err)
+        return
+
+    # Die Karten-Module erst laden, wenn das frontend-Setup seine Datenstruktur
+    # angelegt hat. add_extra_js_url() direkt im async_setup aufzurufen scheitert
+    # sonst mit KeyError 'frontend_extra_module_url'. frontend bleibt bewusst nur
+    # eine after_dependency (keine harte Dependency), damit die Tests ohne das
+    # volle frontend-Setup laufen.
+    @callback
+    def _register_modules(_hass: HomeAssistant) -> None:
+        try:
+            from homeassistant.components.frontend import add_extra_js_url
+
+            for filename, _card_type in LOVELACE_CARDS:
+                add_extra_js_url(hass, f"{FRONTEND_URL_BASE}/{filename}?v={VERSION}")
+            _LOGGER.debug("Hausarbeit-Karten registriert unter %s", FRONTEND_URL_BASE)
+        except Exception as err:
+            _LOGGER.warning("Frontend-Karten konnten nicht registriert werden: %s", err)
+
+    from homeassistant.helpers.start import async_at_start
+
+    async_at_start(hass, _register_modules)
 
 
 # --------------------------------------------------------------------------- #
