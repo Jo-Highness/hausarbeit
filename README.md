@@ -80,12 +80,15 @@ está disponible en alemán, inglés y español. *(La interfaz de usuario está 
 
 ## Screenshots
 
-> ⚠️ **Placeholder** – the following images are not yet included. See
-> [`images/PLACEHOLDER.md`](./images/PLACEHOLDER.md) for the expected shots.
+> Captured from a demo Home Assistant with fictional data.
 
-| Log a completion | Statistics & Ranking | Target/actual progress |
-|:---:|:---:|:---:|
-| ![Claim card](./images/claim-card.png) | ![Stats card](./images/stats-card.png) | ![Targets card](./images/targets-card.png) |
+| Setup (config flow) | Integration & entities |
+|:---:|:---:|
+| ![The UI setup form](./images/config-flow.png) | ![The integration entry and its entities](./images/entities.png) |
+
+> The three bundled Lovelace cards (claim / statistics / target-vs-actual) are best shown
+> on a populated household — see [`images/PLACEHOLDER.md`](./images/PLACEHOLDER.md) for the
+> `claim-card.png` / `stats-card.png` / `targets-card.png` shots still to add.
 
 ---
 
