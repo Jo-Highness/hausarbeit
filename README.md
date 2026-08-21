@@ -100,7 +100,10 @@ está disponible en alemán, inglés y español. *(La interfaz de usuario está 
 
 ### Via HACS (Custom Repository)
 
-The integration is not (yet) part of the HACS default index and is therefore added as a
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Jo-Highness&repository=hausarbeit&category=integration)
+
+Click the button above to open this repository directly in HACS, or add it manually — the
+integration is not (yet) part of the HACS default index and is therefore added as a
 **custom repository**:
 
 1. Open **HACS** in the sidebar.

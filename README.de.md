@@ -93,8 +93,11 @@ está disponible en alemán, inglés y español. *(La documentación completa es
 
 ### Über HACS (Custom Repository)
 
-Die Integration ist (noch) nicht im HACS-Standardindex enthalten und wird daher als
-**benutzerdefiniertes Repository** hinzugefügt:
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Jo-Highness&repository=hausarbeit&category=integration)
+
+Über den Button oben lässt sich dieses Repository direkt in HACS öffnen — oder manuell
+hinzufügen: Die Integration ist (noch) nicht im HACS-Standardindex enthalten und wird daher
+als **benutzerdefiniertes Repository** hinzugefügt:
 
 1. **HACS** in der Seitenleiste öffnen.
 2. Zu **Integrationen** wechseln.
