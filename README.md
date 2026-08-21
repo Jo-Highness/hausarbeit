@@ -1,3 +1,5 @@
+> 🇬🇧 English (this page) · 🇩🇪 [Deutsch](README.de.md) · 🇪🇸 Español (UI only)
+
 <p align="center">
   <img src="custom_components/hausarbeit/brand/logo.png" alt="Hausarbeit-Tracker" width="460">
 </p>
@@ -5,14 +7,14 @@
 # Hausarbeit-Tracker
 
 [![HACS: Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
-[![Validierung](https://img.shields.io/github/actions/workflow/status/Jo-Highness/hausarbeit/validate.yml?style=for-the-badge&label=Validierung)](https://github.com/Jo-Highness/hausarbeit/actions/workflows/validate.yml)
-[![Lizenz: MIT](https://img.shields.io/badge/Lizenz-MIT-green.svg?style=for-the-badge)](./LICENSE)
+[![Validate](https://img.shields.io/github/actions/workflow/status/Jo-Highness/hausarbeit/validate.yml?style=for-the-badge&label=Validate)](https://github.com/Jo-Highness/hausarbeit/actions/workflows/validate.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](./LICENSE)
 [![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2024.7.0%2B-41BDF5.svg?style=for-the-badge&logo=home-assistant&logoColor=white)](https://www.home-assistant.io/)
 
-> Wer hat wann welche Hausarbeit erledigt? Der **Hausarbeit-Tracker** dokumentiert
-> jede erledigte Aufgabe pro Person, führt Statistiken und vergleicht **Soll gegen Ist**
-> je Periode – komplett lokal, ohne Cloud, UI-First und mit drei mitgelieferten
-> Lovelace-Karten.
+> Who did which chore, and when? The **Hausarbeit-Tracker** documents
+> every completed task per person, keeps statistics and compares **target vs. actual**
+> per period – fully local, no cloud, UI-first and with three bundled
+> Lovelace cards.
 
 ### 🌍 English / Español
 
@@ -20,164 +22,162 @@
 completed chore per person, provides statistics and rankings, and compares **target vs.
 actual** per period (day / week / month) — fully local, no cloud, UI-first, with three
 bundled Lovelace cards. The user interface ships in German, English and Spanish.
-*(The full documentation below is written in German.)*
 
 **🇪🇸 Español** — *¿Quién hizo qué tarea del hogar y cuándo?* El **Hausarbeit-Tracker**
 registra cada tarea completada por persona, ofrece estadísticas y clasificaciones, y
 compara **objetivo frente a real** por periodo (día / semana / mes) — totalmente local,
 sin nube, centrado en la interfaz y con tres tarjetas Lovelace incluidas. La interfaz
-está disponible en alemán, inglés y español. *(La documentación completa está en alemán.)*
+está disponible en alemán, inglés y español. *(La interfaz de usuario está disponible en español.)*
 
 ---
 
-## Inhaltsverzeichnis
+## Table of Contents
 
-- [Funktionsumfang](#funktionsumfang)
+- [Features](#features)
 - [Screenshots](#screenshots)
 - [Installation](#installation)
-  - [Über HACS (Custom Repository)](#über-hacs-custom-repository)
-  - [Manuelle Installation](#manuelle-installation)
-- [Einrichtung](#einrichtung)
-  - [Config-Flow](#config-flow-haushalt-anlegen)
-  - [Options-Flow](#options-flow-einstellungen--verwaltung)
-  - [Aufgaben, Personen & Soll-Vorgaben](#aufgaben-personen--soll-vorgaben)
-- [Die drei Lovelace-Karten](#die-drei-lovelace-karten)
-- [Architektur & Datenmodell](#architektur--datenmodell)
-  - [Komponentenüberblick](#komponentenüberblick)
-  - [Datenfluss beim Loggen](#datenfluss-beim-loggen-einer-ausführung)
-  - [Store-Schema](#store-schema)
-- [Entitäten](#entitäten)
+  - [Via HACS (Custom Repository)](#via-hacs-custom-repository)
+  - [Manual Installation](#manual-installation)
+- [Setup](#setup)
+  - [Config Flow](#config-flow-create-a-household)
+  - [Options Flow](#options-flow-settings--management)
+  - [Tasks, Persons & Targets](#tasks-persons--targets)
+- [The Three Lovelace Cards](#the-three-lovelace-cards)
+- [Architecture & Data Model](#architecture--data-model)
+  - [Component Overview](#component-overview)
+  - [Data Flow When Logging](#data-flow-when-logging-an-execution)
+  - [Store Schema](#store-schema)
+- [Entities](#entities)
 - [Services](#services)
-- [Beispiel-Automationen](#beispiel-automationen)
-- [Rohdaten & Export](#rohdaten--export)
+- [Example Automations](#example-automations)
+- [Raw Data & Export](#raw-data--export)
 - [FAQ & Troubleshooting](#faq--troubleshooting)
-- [Lizenz](#lizenz)
+- [License](#license)
 
 ---
 
-## Funktionsumfang
+## Features
 
-- ✅ **Aufgaben** frei definieren (Name, Icon, Kategorie, Punkte/Gewicht, aktiv/inaktiv).
-- 👤 **Personen** verwalten und optional mit einer bestehenden `person.*`-Entität verknüpfen.
-- 📝 **Claimen & Nachtragen**: Erledigungen sofort per Klick loggen oder mit einem
-  abweichenden Zeitpunkt und einer Notiz nachtragen.
-- 🎯 **Soll/Ist pro Periode** – Vorgaben je Person und Aufgabe für **Tag**, **Woche**
-  oder **Monat** (z. B. „Anna: Spülmaschine 3×/Woche"), inkl. Rest, Erfüllungsgrad und
-  „on track"-Indikator.
-- 📊 **Statistiken & Ranking** – aggregierte Auswertung über einen konfigurierbaren
-  Zeitraum (Standard **90 Tage**) mit Aufschlüsselung nach Aufgabe und Zeitfenster
-  (heute / 7 / 30 / 90 Tage / gesamt).
-- 🗂️ **Rohdaten-Export** – das vollständige Ausführungs-Log ist über die WebSocket-API
-  abrufbar und filterbar.
-- 🃏 **Drei mitgelieferte Lovelace-Karten**, die von der Integration **automatisch als
-  Ressource registriert** werden – keine separate HACS-Frontend-Installation nötig.
-- 🖱️ **UI-First**: Vollständige Einrichtung über Config- und Options-Flow, **keine
-  YAML-Pflicht**. Services stehen für Automationen dennoch bereit.
-- 🔒 **Lokal**: `local_push`, keine externe Kommunikation, Daten liegen im HA-Storage.
+- ✅ **Tasks** freely definable (name, icon, category, points/weight, active/inactive).
+- 👤 **Persons** management, optionally linked to an existing `person.*` entity.
+- 📝 **Claim & backfill**: log completions instantly with a click, or backfill them with
+  a different timestamp and a note.
+- 🎯 **Target/actual per period** – targets per person and task for **day**, **week**
+  or **month** (e.g. "Anna: dishwasher 3×/week"), including remaining, completion rate and
+  an "on track" indicator.
+- 📊 **Statistics & ranking** – aggregated evaluation over a configurable
+  time range (default **90 days**) with a breakdown by task and time window
+  (today / 7 / 30 / 90 days / total).
+- 🗂️ **Raw data export** – the complete execution log is available via the WebSocket API
+  and can be filtered.
+- 🃏 **Three bundled Lovelace cards** that are **automatically registered as a resource**
+  by the integration – no separate HACS frontend installation required.
+- 🖱️ **UI-first**: complete setup via config and options flow, **no YAML required**.
+  Services are nevertheless available for automations.
+- 🔒 **Local**: `local_push`, no external communication, data lives in HA storage.
 
 ---
 
 ## Screenshots
 
-> ⚠️ **Platzhalter** – die folgenden Bilder sind noch nicht enthalten. Siehe
-> [`images/PLACEHOLDER.md`](./images/PLACEHOLDER.md) für die erwarteten Aufnahmen.
+> ⚠️ **Placeholder** – the following images are not yet included. See
+> [`images/PLACEHOLDER.md`](./images/PLACEHOLDER.md) for the expected shots.
 
-| Erledigung loggen | Statistik & Ranking | Soll/Ist-Fortschritt |
+| Log a completion | Statistics & Ranking | Target/actual progress |
 |:---:|:---:|:---:|
-| ![Claim-Karte](./images/claim-card.png) | ![Statistik-Karte](./images/stats-card.png) | ![Targets-Karte](./images/targets-card.png) |
+| ![Claim card](./images/claim-card.png) | ![Stats card](./images/stats-card.png) | ![Targets card](./images/targets-card.png) |
 
 ---
 
 ## Installation
 
-### Über HACS (Custom Repository)
+### Via HACS (Custom Repository)
 
-Die Integration ist (noch) nicht im HACS-Standardindex enthalten und wird daher als
-**benutzerdefiniertes Repository** hinzugefügt:
+The integration is not (yet) part of the HACS default index and is therefore added as a
+**custom repository**:
 
-1. **HACS** in der Seitenleiste öffnen.
-2. Zu **Integrationen** wechseln.
-3. Oben rechts das **⋮ (3-Punkte-Menü)** → **Benutzerdefinierte Repositories** öffnen.
-4. Folgende Werte eintragen:
+1. Open **HACS** in the sidebar.
+2. Switch to **Integrations**.
+3. Open the **⋮ (3-dot menu)** in the top right → **Custom repositories**.
+4. Enter the following values:
    - **URL:** `https://github.com/Jo-Highness/hausarbeit`
-   - **Kategorie:** `Integration`
-5. Auf **Hinzufügen** klicken, das Repository anschließend in der Liste auswählen und
-   **installieren**.
-6. **Home Assistant neu starten**.
-7. Unter **Einstellungen → Geräte & Dienste → Integration hinzufügen** nach
-   **„Hausarbeit-Tracker"** suchen und den Config-Flow durchlaufen.
+   - **Category:** `Integration`
+5. Click **Add**, then select the repository in the list and
+   **install** it.
+6. **Restart Home Assistant**.
+7. Under **Settings → Devices & Services → Add Integration**, search for
+   **"Hausarbeit-Tracker"** and run through the config flow.
 
-Die Lovelace-Karten werden beim Start der Integration automatisch als Frontend-Ressource
-registriert – ein separater HACS-Frontend-Eintrag ist **nicht** erforderlich.
+The Lovelace cards are automatically registered as a frontend resource when the integration
+starts – a separate HACS frontend entry is **not** required.
 
-### Manuelle Installation
+### Manual Installation
 
-1. Dieses Repository herunterladen (oder klonen).
-2. Den Ordner `custom_components/hausarbeit` in das `custom_components`-Verzeichnis der
-   Home-Assistant-Konfiguration kopieren:
+1. Download (or clone) this repository.
+2. Copy the folder `custom_components/hausarbeit` into the `custom_components` directory of
+   your Home Assistant configuration:
 
    ```text
    <config>/custom_components/hausarbeit/
    ```
 
-3. **Home Assistant neu starten**.
-4. Integration wie oben beschrieben hinzufügen.
+3. **Restart Home Assistant**.
+4. Add the integration as described above.
 
-**Mindestanforderung:** Home Assistant **2024.4.0** oder neuer.
+**Minimum requirement:** Home Assistant **2024.7.0** or newer.
 
 ---
 
-## Einrichtung
+## Setup
 
-### Config-Flow (Haushalt anlegen)
+### Config Flow (create a household)
 
-Es wird **ein Eintrag pro Haushalt** angelegt. Beim Hinzufügen der Integration wird der
-Haushalt initialisiert (Standardtitel „Hausarbeit"). Es sind keine weiteren Pflichtangaben
-nötig – Personen, Aufgaben und Soll-Vorgaben werden danach über den Options-Flow oder die
-Karten gepflegt.
+**One entry per household** is created. When the integration is added, the household is
+initialized (default title "Hausarbeit"). No further mandatory input is required – persons,
+tasks and targets are managed afterwards via the options flow or the cards.
 
-### Options-Flow (Einstellungen & Verwaltung)
+### Options Flow (settings & management)
 
-Über **Konfigurieren** am Integrationseintrag stehen zwei globale Einstellungen sowie die
-Verwaltung der Stammdaten bereit:
+Via **Configure** on the integration entry, two global settings as well as the management
+of the master data are available:
 
-| Option | Schlüssel | Bedeutung | Standard |
+| Option | Key | Meaning | Default |
 |---|---|---|---|
-| Wochenstart | `week_start` | Erster Wochentag für die Perioden­berechnung (`0`=Montag … `6`=Sonntag, entspricht Python `weekday()`) | `0` (Montag) |
-| Statistik-Zeitraum | `stats_days` | Standard-Zeitraum in Tagen für die Statistik-Aggregation (min. 1, max. 3650) | `90` |
+| Week start | `week_start` | First weekday for period calculation (`0`=Monday … `6`=Sunday, matches Python `weekday()`) | `0` (Monday) |
+| Statistics period | `stats_days` | Default period in days for the statistics aggregation (min. 1, max. 3650) | `90` |
 
-Zusätzlich verwaltet der Options-Flow:
+In addition, the options flow manages:
 
-- **Personen** anlegen / ändern / entfernen,
-- **Aufgaben** anlegen / ändern / entfernen,
-- **Soll-Vorgaben (Targets)** setzen / entfernen.
+- **Persons** create / edit / remove,
+- **Tasks** create / edit / remove,
+- **Targets** set / remove.
 
-### Aufgaben, Personen & Soll-Vorgaben
+### Tasks, Persons & Targets
 
-- **Aufgabe** (`task`): Was erledigt wird. Felder: `name`, optional `icon`, `category`,
-  `points` (Gewicht, Default `1`) und `active` (Default `true`). Punkte fließen als
-  Gewicht in die Statistik ein – so zählt z. B. „Bad putzen" mehr als „Müll rausbringen".
-- **Person** (`person`): Wer erledigt. Felder: `name`, optional `icon`, `color` und
-  `ha_person_entity` (Verknüpfung zu einer bestehenden `person.*`-Entität).
-- **Soll-Vorgabe** (`target`): Wie oft eine Person eine Aufgabe pro Periode erledigen
-  soll. Felder: `person_id`, `task_id`, `period` (`day` / `week` / `month`) und `count`
-  (Soll-Anzahl).
+- **Task** (`task`): What gets done. Fields: `name`, optional `icon`, `category`,
+  `points` (weight, default `1`) and `active` (default `true`). Points are factored in as
+  weight in the statistics – so e.g. "clean the bathroom" counts more than "take out the trash".
+- **Person** (`person`): Who does it. Fields: `name`, optional `icon`, `color` and
+  `ha_person_entity` (link to an existing `person.*` entity).
+- **Target** (`target`): How often a person should complete a task per period.
+  Fields: `person_id`, `task_id`, `period` (`day` / `week` / `month`) and `count`
+  (target count).
 
-  > **Beispiel:** „Anna soll die **Spülmaschine 3×/Woche** ausräumen" →
-  > `period = week`, `count = 3`, `person_id` = Anna, `task_id` = Spülmaschine.
+  > **Example:** "Anna should empty the **dishwasher 3×/week**" →
+  > `period = week`, `count = 3`, `person_id` = Anna, `task_id` = dishwasher.
 
 ---
 
-## Die drei Lovelace-Karten
+## The Three Lovelace Cards
 
-Alle drei Karten werden von der Integration automatisch geladen. Nach der Installation und
-einem Neustart können sie direkt im Dashboard verwendet werden. Falls eine Karte im
-Editor nicht sofort auftaucht, hilft ein Leeren des Browser-Caches (siehe
+All three cards are loaded automatically by the integration. After installation and a
+restart they can be used directly in the dashboard. If a card does not appear immediately in
+the editor, clearing the browser cache helps (see
 [FAQ](#faq--troubleshooting)).
 
-### `hausarbeit-claim-card` – Erledigen & Nachtragen
+### `hausarbeit-claim-card` – Complete & backfill
 
-Buttons zum sofortigen Loggen einer Erledigung sowie zum Nachtragen mit Zeitpunkt/Notiz.
+Buttons for logging a completion instantly as well as for backfilling with timestamp/note.
 
 ```yaml
 type: custom:hausarbeit-claim-card
@@ -191,12 +191,12 @@ title: Wer hat's gemacht?      # optional
 # columns: 3                   # optional: Spaltenanzahl der Aufgaben-Buttons
 ```
 
-> Nachtragen ist immer möglich (optionales Datum/Zeit-Feld). Ein Undo-Button nimmt
-> die zuletzt geloggte Ausführung zurück.
+> Backfilling is always possible (optional date/time field). An undo button reverts
+> the most recently logged execution.
 
-### `hausarbeit-stats-card` – Statistik & Ranking
+### `hausarbeit-stats-card` – Statistics & ranking
 
-Zeigt das Ranking der Personen und die Aufschlüsselung nach Aufgabe/Zeitfenster.
+Shows the ranking of the persons and the breakdown by task/time window.
 
 ```yaml
 type: custom:hausarbeit-stats-card
@@ -205,9 +205,9 @@ title: Hausarbeits-Ranking     # optional
 # default_view: ranking        # optional: ranking | tasks
 ```
 
-### `hausarbeit-targets-card` – Soll/Ist-Fortschritt
+### `hausarbeit-targets-card` – Target/actual progress
 
-Fortschrittsbalken je Soll-Vorgabe für die laufende Periode.
+Progress bar per target for the current period.
 
 ```yaml
 type: custom:hausarbeit-targets-card
@@ -216,15 +216,15 @@ title: Soll & Ist             # optional
 # period: week                # optional: day | week | month
 ```
 
-> ℹ️ **Hinweis:** Die Karten kommunizieren ausschließlich über die integrierte
-> WebSocket-API (siehe [Architektur](#architektur--datenmodell)) und benötigen keine
-> zusätzliche Konfiguration von Entitäten.
+> ℹ️ **Note:** The cards communicate exclusively via the built-in
+> WebSocket API (see [Architecture](#architecture--data-model)) and require no
+> additional configuration of entities.
 
 ---
 
-## Architektur & Datenmodell
+## Architecture & Data Model
 
-### Komponentenüberblick
+### Component Overview
 
 ```mermaid
 flowchart LR
@@ -249,14 +249,14 @@ flowchart LR
     SENSORS -->|States/Attribute| UI
 ```
 
-Der **Coordinator** ist die zentrale Instanz je Config-Entry
-(`hass.data[DOMAIN][entry_id]`). Er kapselt den Zugriff auf den `Store`, benachrichtigt
-bei jeder Datenänderung über das Dispatcher-Signal `hausarbeit_updated`
-(`SIGNAL_UPDATE`) die Sensoren und die WebSocket-Subscriber und feuert bei jeder neuen
-Ausführung das Event `hausarbeit_execution_logged` (`EVENT_EXECUTION_LOGGED`) auf dem
-HA-Event-Bus.
+The **coordinator** is the central instance per config entry
+(`hass.data[DOMAIN][entry_id]`). It encapsulates access to the `Store`, notifies
+the sensors and the WebSocket subscribers on every data change via the dispatcher signal
+`hausarbeit_updated` (`SIGNAL_UPDATE`), and fires the event
+`hausarbeit_execution_logged` (`EVENT_EXECUTION_LOGGED`) on the HA event bus on every new
+execution.
 
-### Datenfluss beim Loggen einer Ausführung
+### Data Flow When Logging an Execution
 
 ```mermaid
 sequenceDiagram
@@ -277,12 +277,12 @@ sequenceDiagram
     S-->>U: aktualisierte States/Attribute
 ```
 
-### Store-Schema
+### Store Schema
 
-Persistiert über `homeassistant.helpers.storage.Store` unter dem Schlüssel
-`hausarbeit_data`, **STORAGE_VERSION = 1** (Major, mit `async_migrate_func` für künftige
-Migrationen; STORAGE_MINOR_VERSION = 1 für vorwärtskompatible Ergänzungen). Das
-gespeicherte Dokument hat vier Top-Level-Schlüssel:
+Persisted via `homeassistant.helpers.storage.Store` under the key
+`hausarbeit_data`, **STORAGE_VERSION = 1** (major, with `async_migrate_func` for future
+migrations; STORAGE_MINOR_VERSION = 1 for forward-compatible additions). The
+stored document has four top-level keys:
 
 ```jsonc
 {
@@ -328,69 +328,69 @@ gespeicherte Dokument hat vier Top-Level-Schlüssel:
 }
 ```
 
-**Feld-Referenz** (aus `const.py`):
+**Field reference** (from `const.py`):
 
-| Feld | Konstante | Verwendung |
+| Field | Constant | Usage |
 |---|---|---|
-| `id` | `F_ID` | eindeutige ID mit Präfix `per_` / `tsk_` / `tgt_` / `exe_` |
-| `name` | `F_NAME` | Person / Aufgabe |
-| `icon` | `F_ICON` | optionales MDI-Icon |
-| `color` | `F_COLOR` | optionale Farbe der Person |
-| `ha_person_entity` | `F_HA_PERSON` | optionale Verknüpfung zu `person.*` |
-| `created` | `F_CREATED` | ISO-8601 UTC, Anlagezeitpunkt |
-| `category` | `F_CATEGORY` | optionale Aufgaben-Kategorie |
-| `points` | `F_POINTS` | Gewicht der Aufgabe (Default 1) |
-| `active` | `F_ACTIVE` | Aufgabe aktiv? (Default true) |
-| `person_id` | `F_PERSON_ID` | Fremdschlüssel in Target/Execution |
-| `task_id` | `F_TASK_ID` | Fremdschlüssel in Target/Execution |
+| `id` | `F_ID` | unique ID with prefix `per_` / `tsk_` / `tgt_` / `exe_` |
+| `name` | `F_NAME` | person / task |
+| `icon` | `F_ICON` | optional MDI icon |
+| `color` | `F_COLOR` | optional color of the person |
+| `ha_person_entity` | `F_HA_PERSON` | optional link to `person.*` |
+| `created` | `F_CREATED` | ISO-8601 UTC, creation timestamp |
+| `category` | `F_CATEGORY` | optional task category |
+| `points` | `F_POINTS` | weight of the task (default 1) |
+| `active` | `F_ACTIVE` | task active? (default true) |
+| `person_id` | `F_PERSON_ID` | foreign key in target/execution |
+| `task_id` | `F_TASK_ID` | foreign key in target/execution |
 | `period` | `F_PERIOD` | `day` / `week` / `month` |
-| `count` | `F_COUNT` | Soll-Anzahl je Periode |
-| `ts` | `F_TIMESTAMP` | Zeitpunkt der Ausführung (ISO-8601 UTC) |
-| `note` | `F_NOTE` | optionale Notiz zur Ausführung |
+| `count` | `F_COUNT` | target count per period |
+| `ts` | `F_TIMESTAMP` | timestamp of the execution (ISO-8601 UTC) |
+| `note` | `F_NOTE` | optional note for the execution |
 
 ---
 
-## Entitäten
+## Entities
 
-Alle Entitäten hängen an einem Gerät je Haushalt (Hersteller `hausarbeit`, Modell
-`Haushalt`). `unique_id`s werden stabil aus der jeweiligen Datensatz-ID abgeleitet, sodass
-Umbenennungen und Anpassungen im UI erhalten bleiben.
+All entities are attached to one device per household (manufacturer `hausarbeit`, model
+`Haushalt`). `unique_id`s are derived stably from the respective record ID, so that
+renames and adjustments in the UI are preserved.
 
-### Personen-Sensor (einer je Person)
+### Person sensor (one per person)
 
-- **State:** Ausführungen bzw. gewichtete Punkte im Statistik-Zeitraum (`stats_days`,
-  Standard 90 Tage).
-- **Attribute:**
-  - Aufschlüsselung **pro Aufgabe** (wie oft/erledigte Punkte je Aufgabe),
-  - Zeitfenster **`today` / `7d` / `30d` / `90d` / `all`** (aus `STAT_WINDOWS_DAYS`;
-    `today` = seit lokalem Kalendertag-Beginn, `all` = gesamt).
-- `unique_id`: abgeleitet aus der Personen-ID (`per_…`).
+- **State:** executions or weighted points within the statistics period (`stats_days`,
+  default 90 days).
+- **Attributes:**
+  - breakdown **per task** (how often/completed points per task),
+  - time windows **`today` / `7d` / `30d` / `90d` / `all`** (from `STAT_WINDOWS_DAYS`;
+    `today` = since the start of the local calendar day, `all` = total).
+- `unique_id`: derived from the person ID (`per_…`).
 
-### Target-Sensor (einer je Soll-Vorgabe)
+### Target sensor (one per target)
 
-- **State:** **Ist**-Anzahl der laufenden Periode.
-- **Attribute:**
-  - `Soll` (aus `count`),
-  - `Rest` (Soll − Ist, min. 0),
-  - `Erfüllungsgrad` in % (Ist/Soll),
-  - `Periodenstart` / `Periodenende` (unter Berücksichtigung von `week_start`),
-  - `on_track` (bool – liegt die Person im Zeitverlauf der Periode im Plan?).
-- `unique_id`: abgeleitet aus der Target-ID (`tgt_…`).
+- **State:** **actual** count of the current period.
+- **Attributes:**
+  - `Soll` (from `count`),
+  - `Rest` (target − actual, min. 0),
+  - `Erfüllungsgrad` in % (actual/target),
+  - `Periodenstart` / `Periodenende` (taking `week_start` into account),
+  - `on_track` (bool – is the person on plan for the elapsed portion of the period?).
+- `unique_id`: derived from the target ID (`tgt_…`).
 
-### Optional: „Zuletzt erledigt" je Aufgabe
+### Optional: "Last completed" per task
 
-Pro Aufgabe kann ein Sensor bereitstehen, dessen State/Attribute die **letzte Erledigung**
-(von wem / wann) anzeigen – nützlich für Dashboards und Automationen wie „X wurde seit
-N Tagen nicht mehr gemacht".
+Per task, a sensor can be available whose state/attributes show the **last completion**
+(by whom / when) – useful for dashboards and automations like "X has not been done for
+N days".
 
 ---
 
 ## Services
 
-Alle Services liegen in der Domain `hausarbeit`. Feldnamen entsprechen exakt den
-Konstanten aus `const.py`.
+All services live in the domain `hausarbeit`. Field names exactly match the
+constants from `const.py`.
 
-### `hausarbeit.log_execution` – Erledigung loggen
+### `hausarbeit.log_execution` – log a completion
 
 ```yaml
 service: hausarbeit.log_execution
@@ -401,7 +401,7 @@ data:
   # note: "vor dem Abendessen"        # optional
 ```
 
-### `hausarbeit.delete_execution` – Erledigung löschen
+### `hausarbeit.delete_execution` – delete a completion
 
 ```yaml
 service: hausarbeit.delete_execution
@@ -409,7 +409,7 @@ data:
   execution_id: exe_77gg88hh
 ```
 
-### `hausarbeit.correct_execution` – Erledigung korrigieren
+### `hausarbeit.correct_execution` – correct a completion
 
 ```yaml
 service: hausarbeit.correct_execution
@@ -421,7 +421,7 @@ data:
   # note: "korrigiert"        # optional
 ```
 
-### `hausarbeit.add_task` – Aufgabe anlegen
+### `hausarbeit.add_task` – create a task
 
 ```yaml
 service: hausarbeit.add_task
@@ -433,7 +433,7 @@ data:
   # active: true
 ```
 
-### `hausarbeit.update_task` – Aufgabe ändern
+### `hausarbeit.update_task` – edit a task
 
 ```yaml
 service: hausarbeit.update_task
@@ -446,7 +446,7 @@ data:
   # active: false
 ```
 
-### `hausarbeit.remove_task` – Aufgabe entfernen
+### `hausarbeit.remove_task` – remove a task
 
 ```yaml
 service: hausarbeit.remove_task
@@ -454,7 +454,7 @@ data:
   task_id: tsk_11aa22bb
 ```
 
-### `hausarbeit.add_person` – Person anlegen
+### `hausarbeit.add_person` – create a person
 
 ```yaml
 service: hausarbeit.add_person
@@ -465,7 +465,7 @@ data:
   # ha_person_entity: person.anna
 ```
 
-### `hausarbeit.update_person` – Person ändern
+### `hausarbeit.update_person` – edit a person
 
 ```yaml
 service: hausarbeit.update_person
@@ -477,7 +477,7 @@ data:
   # ha_person_entity: person.anna
 ```
 
-### `hausarbeit.remove_person` – Person entfernen
+### `hausarbeit.remove_person` – remove a person
 
 ```yaml
 service: hausarbeit.remove_person
@@ -485,7 +485,7 @@ data:
   person_id: per_ab12cd34
 ```
 
-### `hausarbeit.set_target` – Soll-Vorgabe setzen
+### `hausarbeit.set_target` – set a target
 
 ```yaml
 service: hausarbeit.set_target
@@ -496,7 +496,7 @@ data:
   count: 3
 ```
 
-### `hausarbeit.remove_target` – Soll-Vorgabe entfernen
+### `hausarbeit.remove_target` – remove a target
 
 ```yaml
 service: hausarbeit.remove_target
@@ -506,12 +506,12 @@ data:
 
 ---
 
-## Beispiel-Automationen
+## Example Automations
 
-### 1. Erinnerung, wenn eine Soll-Vorgabe zum Periodenende nicht erfüllt ist
+### 1. Reminder when a target is not met by the end of the period
 
-Prüft sonntags um 19:00 einen Target-Sensor: Liegt der Erfüllungsgrad unter 100 % bzw.
-ist noch ein Rest offen, wird eine Erinnerung verschickt.
+Checks a target sensor on Sundays at 19:00: if the completion rate is below 100 % or
+there is still a remaining amount, a reminder is sent.
 
 ```yaml
 alias: Hausarbeit – Wochen-Soll erinnern
@@ -536,10 +536,10 @@ action:
         {{ state_attr('sensor.hausarbeit_soll_anna_spulmaschine', 'Erfüllungsgrad') }} %).
 ```
 
-### 2. Benachrichtigung, wenn jemand eine Aufgabe loggt
+### 2. Notification when someone logs a task
 
-Nutzt das Event `hausarbeit_execution_logged`, das bei jeder neuen Ausführung auf dem
-Event-Bus gefeuert wird.
+Uses the event `hausarbeit_execution_logged`, which is fired on the event bus on every new
+execution.
 
 ```yaml
 alias: Hausarbeit – Erledigung melden
@@ -555,12 +555,12 @@ action:
         ({{ trigger.event.data.ts }}).
 ```
 
-> 💡 Alternativ kann statt des Events die **Zustandsänderung** eines Personen-Sensors
-> (`state_changed`) als Auslöser dienen.
+> 💡 Alternatively, instead of the event, the **state change** of a person sensor
+> (`state_changed`) can serve as the trigger.
 
-### 3. Wöchentliches Ranking als Notify
+### 3. Weekly ranking as a notification
 
-Verschickt montags früh einen kurzen Ranking-Text auf Basis der Personen-Sensoren.
+Sends a short ranking text on Monday mornings based on the person sensors.
 
 ```yaml
 alias: Hausarbeit – Wochenranking
@@ -588,78 +588,77 @@ action:
 
 ---
 
-## Rohdaten & Export
+## Raw Data & Export
 
-Das vollständige Ausführungs-Log ist über die WebSocket-API abrufbar. Die Karten und
-eigene Skripte nutzen dafür die folgenden Kommandos:
+The complete execution log is available via the WebSocket API. The cards and
+your own scripts use the following commands for this:
 
-| WebSocket-Typ | Konstante | Zweck |
+| WebSocket type | Constant | Purpose |
 |---|---|---|
-| `hausarbeit/tasks` | `WS_TASKS` | Liste aller Aufgaben |
-| `hausarbeit/persons` | `WS_PERSONS` | Liste aller Personen |
-| `hausarbeit/targets` | `WS_TARGETS` | Targets inkl. Ist / Soll / Rest / % |
-| `hausarbeit/log` | `WS_LOG` | **Ausführungs-Log (mit Filter/Limit) – Basis für den Export** |
-| `hausarbeit/stats` | `WS_STATS` | Aggregierte Statistik (Parameter `days`) |
-| `hausarbeit/log_execution` | `WS_LOG_EXECUTION` | Loggt eine Ausführung und liefert die `execution_id` |
-| `hausarbeit/delete_execution` | `WS_DELETE_EXECUTION` | Löscht eine Ausführung |
-| `hausarbeit/subscribe` | `WS_SUBSCRIBE` | Push bei jeder Datenänderung |
+| `hausarbeit/tasks` | `WS_TASKS` | list of all tasks |
+| `hausarbeit/persons` | `WS_PERSONS` | list of all persons |
+| `hausarbeit/targets` | `WS_TARGETS` | targets incl. actual / target / remaining / % |
+| `hausarbeit/log` | `WS_LOG` | **execution log (with filter/limit) – basis for the export** |
+| `hausarbeit/stats` | `WS_STATS` | aggregated statistics (parameter `days`) |
+| `hausarbeit/log_execution` | `WS_LOG_EXECUTION` | logs an execution and returns the `execution_id` |
+| `hausarbeit/delete_execution` | `WS_DELETE_EXECUTION` | deletes an execution |
+| `hausarbeit/subscribe` | `WS_SUBSCRIBE` | push on every data change |
 
-**Beispiel** – Log der letzten Ausführungen über die Entwicklerwerkzeuge (WebSocket)
-abrufen:
+**Example** – retrieve the log of the last executions via the developer tools (WebSocket):
 
 ```json
 { "id": 1, "type": "hausarbeit/log", "limit": 500 }
 ```
 
-Die zurückgelieferte JSON-Liste enthält je Eintrag `id`, `person_id`, `task_id`, `ts` und
-`note` und kann so ohne Umwege exportiert oder weiterverarbeitet werden.
+The returned JSON list contains `id`, `person_id`, `task_id`, `ts` and
+`note` per entry and can thus be exported or processed further without detours.
 
-### Einzelne Ausführungen korrigieren oder löschen
+### Correcting or deleting individual executions
 
-Die Claim-Karte bietet einen **Undo-Button** für die zuletzt geloggte Ausführung.
-Beliebige vergangene Einträge korrigierst oder löschst du über die HA-Oberfläche unter
-**Entwicklerwerkzeuge → Aktionen** mit den Services `hausarbeit.correct_execution`
-bzw. `hausarbeit.delete_execution` – die passende `execution_id` findest du über
-`hausarbeit/log` (siehe Tabelle oben). Eine dedizierte Log-Verwaltungs-Karte ist für
-eine spätere Version geplant.
+The claim card provides an **undo button** for the most recently logged execution.
+You can correct or delete any past entries via the HA interface under
+**Developer Tools → Actions** using the services `hausarbeit.correct_execution`
+or `hausarbeit.delete_execution` – you find the matching `execution_id` via
+`hausarbeit/log` (see the table above). A dedicated log management card is planned for
+a later version.
 
 ---
 
 ## FAQ & Troubleshooting
 
-**Die Karten erscheinen nicht / „Custom element doesn't exist".**
-Die Kartenressourcen werden beim Start der Integration automatisch registriert
-(`/hausarbeit_frontend/…`). Nach der Erstinstallation daher einmal **Home Assistant neu
-starten** und danach einen **Hard-Reload** des Browsers durchführen (Cache leeren). Prüfen
-lässt sich die Registrierung unter **Einstellungen → Dashboards → ⋮ → Ressourcen**.
+**The cards do not appear / "Custom element doesn't exist".**
+The card resources are automatically registered when the integration starts
+(`/hausarbeit_frontend/…`). After the initial installation, therefore **restart Home
+Assistant** once and then perform a **hard reload** of the browser (clear the cache). The
+registration can be checked under **Settings → Dashboards → ⋮ → Resources**.
 
-**Perioden/Statistik „stimmen nicht" – falscher Wochenbeginn oder Zeitzone.**
-Perioden werden anhand der **HA-Zeitzone** und der Option **Wochenstart** (`week_start`,
-Standard Montag = `0`) berechnet. Zeitstempel (`ts`) werden intern in **UTC** gespeichert
-und für Tages-/Wochen-/Monatsgrenzen in die lokale Zeit umgerechnet. Wochenstart im
-Options-Flow anpassen, wenn die Woche z. B. sonntags beginnen soll.
+**Periods/statistics are "wrong" – incorrect week start or time zone.**
+Periods are calculated based on the **HA time zone** and the **week start** option
+(`week_start`, default Monday = `0`). Timestamps (`ts`) are stored internally in **UTC**
+and converted to local time for day/week/month boundaries. Adjust the week start in the
+options flow if the week should begin on Sunday, for example.
 
-**Ein Sensor aktualisiert sich nicht sofort.**
-Sensoren werden über das Dispatcher-Signal `hausarbeit_updated` aktualisiert. Bleibt ein
-Wert hängen, hilft ein Neuladen der Integration
-(**Geräte & Dienste → Hausarbeit-Tracker → ⋮ → Neu laden**). Der Statistik-State bezieht
-sich immer auf den konfigurierten Zeitraum `stats_days` (Standard 90 Tage).
+**A sensor does not update immediately.**
+Sensors are updated via the dispatcher signal `hausarbeit_updated`. If a
+value gets stuck, reloading the integration helps
+(**Devices & Services → Hausarbeit-Tracker → ⋮ → Reload**). The statistics state always
+refers to the configured period `stats_days` (default 90 days).
 
-**Was passiert bei einem Update / einer Migration?**
-Der Store hat `STORAGE_VERSION = 1`. Künftige Schema-Änderungen werden über
-`async_migrate_func` automatisch beim Laden migriert; ein manueller Eingriff ist nicht
-nötig. Vor größeren Updates empfiehlt sich dennoch ein HA-Backup.
+**What happens during an update / a migration?**
+The store has `STORAGE_VERSION = 1`. Future schema changes are migrated automatically on
+load via `async_migrate_func`; manual intervention is not needed. Before larger updates,
+an HA backup is nevertheless recommended.
 
-**Kann ich alles nur per YAML/Service betreiben?**
-Ja. Der Options-Flow ist bequem, aber sämtliche Stammdaten- und Log-Operationen sind auch
-über die [Services](#services) verfügbar (UI-First, aber nicht UI-Pflicht).
-
----
-
-## Lizenz
-
-Veröffentlicht unter der [MIT-Lizenz](./LICENSE).
+**Can I run everything only via YAML/service?**
+Yes. The options flow is convenient, but all master data and log operations are also
+available via the [Services](#services) (UI-first, but not UI-mandatory).
 
 ---
 
-<sub>Repository: <a href="https://github.com/Jo-Highness/hausarbeit">github.com/Jo-Highness/hausarbeit</a> · Integration „Hausarbeit-Tracker" · lokal &amp; ohne Cloud.</sub>
+## License
+
+Released under the [MIT License](./LICENSE).
+
+---
+
+<sub>Repository: <a href="https://github.com/Jo-Highness/hausarbeit">github.com/Jo-Highness/hausarbeit</a> · Integration "Hausarbeit-Tracker" · local &amp; without cloud.</sub>
