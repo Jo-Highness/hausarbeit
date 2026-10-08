@@ -82,6 +82,8 @@ CONF_STATS_DAYS: Final = "stats_days"  # Standard-Statistikzeitraum in Tagen
 
 DEFAULT_WEEK_START: Final = 0  # Montag
 DEFAULT_STATS_DAYS: Final = 90
+MIN_POINTS: Final = 0.0  # Grenzen für Punkte/Gewicht (wie services.yaml)
+MAX_POINTS: Final = 100.0
 MIN_STATS_DAYS: Final = 1
 MAX_STATS_DAYS: Final = 3650
 

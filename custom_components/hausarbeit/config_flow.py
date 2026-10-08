@@ -34,12 +34,17 @@ from .const import (
     F_PERSON_ID,
     F_POINTS,
     F_TASK_ID,
+    MAX_POINTS,
     MAX_STATS_DAYS,
+    MIN_POINTS,
     MIN_STATS_DAYS,
     PERIOD_WEEK,
     PERIODS,
 )
 from .coordinator import HausarbeitCoordinator, HausarbeitError
+
+# Punkte/Gewicht: gleiche Grenzen wie der Selektor in services.yaml (0..100).
+POINTS_SCHEMA = vol.All(vol.Coerce(float), vol.Range(min=MIN_POINTS, max=MAX_POINTS))
 
 WEEKDAYS = {
     0: "Montag",
@@ -177,18 +182,23 @@ class HausarbeitOptionsFlow(config_entries.OptionsFlow):
         if person is None:
             self._selected = None
             return await self.async_step_persons()
+        errors = {}
         if user_input is not None:
-            self._coord.update_person(
-                self._selected,
-                name=user_input[F_NAME],
-                icon=user_input.get(F_ICON) or None,
-                color=user_input.get(F_COLOR) or None,
-                ha_person_entity=user_input.get(F_HA_PERSON) or None,
-            )
-            self._selected = None
-            return await self.async_step_persons()
+            try:
+                self._coord.update_person(
+                    self._selected,
+                    name=user_input[F_NAME],
+                    icon=user_input.get(F_ICON) or None,
+                    color=user_input.get(F_COLOR) or None,
+                    ha_person_entity=user_input.get(F_HA_PERSON) or None,
+                )
+                self._selected = None
+                return await self.async_step_persons()
+            except HausarbeitError:
+                errors["base"] = "invalid"
         return self.async_show_form(
             step_id="person_edit_form",
+            errors=errors,
             data_schema=vol.Schema(
                 {
                     vol.Required(F_NAME, default=person.get(F_NAME, "")): cv.string,
@@ -220,23 +230,28 @@ class HausarbeitOptionsFlow(config_entries.OptionsFlow):
         )
 
     async def async_step_task_add(self, user_input=None):
+        errors = {}
         if user_input is not None:
-            self._coord.add_task(
-                user_input[F_NAME],
-                icon=user_input.get(F_ICON) or None,
-                category=user_input.get(F_CATEGORY) or None,
-                points=user_input.get(F_POINTS),
-                active=user_input.get(F_ACTIVE, True),
-            )
-            return await self.async_step_tasks()
+            try:
+                self._coord.add_task(
+                    user_input[F_NAME],
+                    icon=user_input.get(F_ICON) or None,
+                    category=user_input.get(F_CATEGORY) or None,
+                    points=user_input.get(F_POINTS),
+                    active=user_input.get(F_ACTIVE, True),
+                )
+                return await self.async_step_tasks()
+            except HausarbeitError:
+                errors["base"] = "invalid"
         return self.async_show_form(
             step_id="task_add",
+            errors=errors,
             data_schema=vol.Schema(
                 {
                     vol.Required(F_NAME): cv.string,
                     vol.Optional(F_ICON, default="mdi:broom"): cv.string,
                     vol.Optional(F_CATEGORY, default=""): cv.string,
-                    vol.Optional(F_POINTS, default=1): vol.Coerce(float),
+                    vol.Optional(F_POINTS, default=1): POINTS_SCHEMA,
                     vol.Optional(F_ACTIVE, default=True): cv.boolean,
                 }
             ),
@@ -259,25 +274,30 @@ class HausarbeitOptionsFlow(config_entries.OptionsFlow):
         if task is None:
             self._selected = None
             return await self.async_step_tasks()
+        errors = {}
         if user_input is not None:
-            self._coord.update_task(
-                self._selected,
-                name=user_input[F_NAME],
-                icon=user_input.get(F_ICON) or None,
-                category=user_input.get(F_CATEGORY) or None,
-                points=user_input.get(F_POINTS),
-                active=user_input.get(F_ACTIVE),
-            )
-            self._selected = None
-            return await self.async_step_tasks()
+            try:
+                self._coord.update_task(
+                    self._selected,
+                    name=user_input[F_NAME],
+                    icon=user_input.get(F_ICON) or None,
+                    category=user_input.get(F_CATEGORY) or None,
+                    points=user_input.get(F_POINTS),
+                    active=user_input.get(F_ACTIVE),
+                )
+                self._selected = None
+                return await self.async_step_tasks()
+            except HausarbeitError:
+                errors["base"] = "invalid"
         return self.async_show_form(
             step_id="task_edit_form",
+            errors=errors,
             data_schema=vol.Schema(
                 {
                     vol.Required(F_NAME, default=task.get(F_NAME, "")): cv.string,
                     vol.Optional(F_ICON, default=task.get(F_ICON) or "mdi:broom"): cv.string,
                     vol.Optional(F_CATEGORY, default=task.get(F_CATEGORY) or ""): cv.string,
-                    vol.Optional(F_POINTS, default=task.get(F_POINTS, 1)): vol.Coerce(float),
+                    vol.Optional(F_POINTS, default=task.get(F_POINTS, 1)): POINTS_SCHEMA,
                     vol.Optional(F_ACTIVE, default=task.get(F_ACTIVE, True)): cv.boolean,
                 }
             ),

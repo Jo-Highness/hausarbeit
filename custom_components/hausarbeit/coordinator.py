@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
+import math
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -43,6 +44,8 @@ from .const import (
     ID_PREFIX_PERSON,
     ID_PREFIX_TARGET,
     ID_PREFIX_TASK,
+    MAX_POINTS,
+    MIN_POINTS,
     PERIOD_MONTH,
     PERIODS,
     SIGNAL_UPDATE,
@@ -65,6 +68,24 @@ _LOGGER = logging.getLogger(__name__)
 
 class HausarbeitError(Exception):
     """Fachlicher Fehler (z. B. unbekannte Person/Aufgabe)."""
+
+
+def _check_name(name: Any, message: str) -> str:
+    """Namen trimmen; leer/None ist ungültig (gleiche Regel wie beim Anlegen)."""
+    if name is None or not str(name).strip():
+        raise HausarbeitError(message)
+    return str(name).strip()
+
+
+def _check_points(points: Any) -> float:
+    """Punkte/Gewicht: endliche Zahl in [MIN_POINTS, MAX_POINTS]."""
+    try:
+        value = float(points)
+    except (TypeError, ValueError) as err:
+        raise HausarbeitError("Punkte müssen eine Zahl sein.") from err
+    if not math.isfinite(value) or not MIN_POINTS <= value <= MAX_POINTS:
+        raise HausarbeitError(f"Punkte müssen zwischen {MIN_POINTS:g} und {MAX_POINTS:g} liegen.")
+    return value
 
 
 class HausarbeitCoordinator:
@@ -134,6 +155,8 @@ class HausarbeitCoordinator:
         return person
 
     def update_person(self, person_id: str, **changes: Any) -> dict:
+        if F_NAME in changes:
+            changes[F_NAME] = _check_name(changes[F_NAME], "Name der Person darf nicht leer sein.")
         item = self.store.update(self.store.persons, person_id, changes)
         if item is None:
             raise HausarbeitError(f"Person {person_id} nicht gefunden.")
@@ -168,7 +191,7 @@ class HausarbeitCoordinator:
             F_NAME: str(name).strip(),
             F_ICON: icon,
             F_CATEGORY: category,
-            F_POINTS: 1 if points is None else points,
+            F_POINTS: 1 if points is None else _check_points(points),
             F_ACTIVE: True if active is None else bool(active),
             F_CREATED: dt_util.utcnow().isoformat(),
         }
@@ -177,6 +200,10 @@ class HausarbeitCoordinator:
         return task
 
     def update_task(self, task_id: str, **changes: Any) -> dict:
+        if F_NAME in changes:
+            changes[F_NAME] = _check_name(changes[F_NAME], "Name der Aufgabe darf nicht leer sein.")
+        if changes.get(F_POINTS) is not None:
+            changes[F_POINTS] = _check_points(changes[F_POINTS])
         item = self.store.update(self.store.tasks, task_id, changes)
         if item is None:
             raise HausarbeitError(f"Aufgabe {task_id} nicht gefunden.")

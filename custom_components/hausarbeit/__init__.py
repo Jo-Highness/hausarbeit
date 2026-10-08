@@ -38,6 +38,8 @@ from .const import (
     FRONTEND_DIR,
     FRONTEND_URL_BASE,
     LOVELACE_CARDS,
+    MAX_POINTS,
+    MIN_POINTS,
     PERIODS,
     PLATFORMS,
     SERVICE_ADD_PERSON,
@@ -54,6 +56,9 @@ from .const import (
     VERSION,
 )
 from .coordinator import HausarbeitCoordinator, HausarbeitError
+
+# Punkte/Gewicht: gleiche Grenzen wie der Selektor in services.yaml (0..100).
+POINTS_SCHEMA = vol.All(vol.Coerce(float), vol.Range(min=MIN_POINTS, max=MAX_POINTS))
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -304,7 +309,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
                     vol.Required(F_NAME): cv.string,
                     vol.Optional(F_ICON): cv.string,
                     vol.Optional(F_CATEGORY): cv.string,
-                    vol.Optional(F_POINTS): vol.Coerce(float),
+                    vol.Optional(F_POINTS): POINTS_SCHEMA,
                     vol.Optional(F_ACTIVE): cv.boolean,
                 }
             ),
@@ -319,7 +324,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
                     vol.Optional(F_NAME): cv.string,
                     vol.Optional(F_ICON): cv.string,
                     vol.Optional(F_CATEGORY): cv.string,
-                    vol.Optional(F_POINTS): vol.Coerce(float),
+                    vol.Optional(F_POINTS): POINTS_SCHEMA,
                     vol.Optional(F_ACTIVE): cv.boolean,
                 }
             ),

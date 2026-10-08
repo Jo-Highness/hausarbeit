@@ -5,8 +5,11 @@ from __future__ import annotations
 from datetime import timedelta
 
 from homeassistant.util import dt as dt_util
+import pytest
+import voluptuous as vol
 
-from custom_components.hausarbeit.const import F_PERSON_ID, F_TASK_ID
+from custom_components.hausarbeit.const import DOMAIN, F_PERSON_ID, F_TASK_ID
+from custom_components.hausarbeit.coordinator import HausarbeitError
 
 
 async def test_build_stats_ranking_and_shares(setup_integration, hass):
@@ -96,3 +99,39 @@ async def test_last_done(setup_integration, hass):
     # jüngster Zeitstempel
     assert info["ts"].startswith(now.strftime("%Y-%m-%d"))
     assert coordinator.last_done("tsk_nichtvorhanden") is None
+
+
+async def test_update_rejects_empty_names_and_trims(setup_integration, hass):
+    _entry, coordinator = setup_integration
+    alice = coordinator.add_person("Alice")
+    task = coordinator.add_task("Spülen")
+
+    for bad in ("", "   ", None):
+        with pytest.raises(HausarbeitError):
+            coordinator.update_person(alice["id"], name=bad)
+        with pytest.raises(HausarbeitError):
+            coordinator.update_task(task["id"], name=bad)
+    assert coordinator.store.get_person(alice["id"])["name"] == "Alice"
+    assert coordinator.store.get_task(task["id"])["name"] == "Spülen"
+
+    coordinator.update_person(alice["id"], name="  Alicia ")
+    assert coordinator.store.get_person(alice["id"])["name"] == "Alicia"
+
+
+async def test_points_are_bounded_and_finite(setup_integration, hass):
+    _entry, coordinator = setup_integration
+    for bad in (-1, 100.5, float("nan"), float("inf"), "abc"):
+        with pytest.raises(HausarbeitError):
+            coordinator.add_task("X", points=bad)
+    task = coordinator.add_task("Bad putzen", points=2.5)
+    assert task["points"] == 2.5
+    with pytest.raises(HausarbeitError):
+        coordinator.update_task(task["id"], points=float("nan"))
+    assert coordinator.store.get_task(task["id"])["points"] == 2.5
+
+
+async def test_service_rejects_out_of_range_points(setup_integration, hass):
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN, "add_task", {"name": "X", "points": 1000}, blocking=True, return_response=True
+        )

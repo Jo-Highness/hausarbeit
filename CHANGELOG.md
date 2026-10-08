@@ -7,6 +7,16 @@ und dieses Projekt folgt der [Semantischen Versionierung](https://semver.org/lan
 
 ## [Unveröffentlicht]
 
+### Fixed
+
+- `update_person`/`update_task` (Services, Options-Flow) akzeptierten einen leeren Namen
+  und trimmten nicht – dieselbe Regel wie beim Anlegen gilt jetzt auch beim Ändern.
+- Punkte/Gewicht wurden nur zu `float` konvertiert: negative Werte, `nan`/`inf` und Werte
+  über 100 wurden gespeichert. Services, Options-Flow und Coordinator erzwingen jetzt
+  0–100 (wie der Selektor in `services.yaml`).
+- Options-Flow: ungültige Eingaben bei „Aufgabe anlegen", „Person/Aufgabe bearbeiten"
+  zeigen jetzt den Formularfehler „invalid" statt eines unbehandelten Fehlers (HTTP 500).
+
 ## [0.1.4] – 2026-08-21
 
 ### Added

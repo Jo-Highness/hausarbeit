@@ -140,3 +140,33 @@ async def test_options_person_remove(setup_integration, hass):
     )
     assert result["type"] == FlowResultType.MENU
     assert coordinator.store.get_person(p["id"]) is None
+
+
+async def test_options_task_add_blank_name_shows_error(setup_integration, hass):
+    """A blank task name re-shows the form with an error instead of a 500."""
+    entry, coordinator = setup_integration
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await _menu(hass, result["flow_id"], "tasks")
+    result = await _menu(hass, result["flow_id"], "task_add")
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {F_NAME: "   ", "points": 1}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid"}
+    assert coordinator.store.tasks == []
+
+
+async def test_options_person_edit_blank_name_shows_error(setup_integration, hass):
+    entry, coordinator = setup_integration
+    person = coordinator.add_person("Hans")
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await _menu(hass, result["flow_id"], "persons")
+    result = await _menu(hass, result["flow_id"], "person_edit")
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"person": person["id"]}
+    )
+    assert result["step_id"] == "person_edit_form"
+    result = await hass.config_entries.options.async_configure(result["flow_id"], {F_NAME: " "})
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid"}
+    assert coordinator.store.get_person(person["id"])[F_NAME] == "Hans"
