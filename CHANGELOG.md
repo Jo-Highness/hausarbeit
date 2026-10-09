@@ -7,6 +7,10 @@ und dieses Projekt folgt der [Semantischen Versionierung](https://semver.org/lan
 
 ## [Unveröffentlicht]
 
+## [0.1.5] – 2026-10-09
+
+> Hinweis: `const.VERSION` (Geräte-Firmwareversion und Cache-Bust der Lovelace-Karten) stand seit 0.1.4 noch auf 0.1.3 und ist jetzt wieder mit `manifest.json` synchron.
+
 ### Fixed
 
 - `update_person`/`update_task` (Services, Options-Flow) akzeptierten einen leeren Namen
@@ -118,5 +122,6 @@ und dieses Projekt folgt der [Semantischen Versionierung](https://semver.org/lan
 - **Rohdaten-Export** des Ausführungs-Logs über die WebSocket-API.
 - Deutschsprachige Übersetzungen und Dokumentation (README, HACS-Info).
 
-[Unveröffentlicht]: https://github.com/Jo-Highness/hausarbeit/compare/v0.1.0...HEAD
+[Unveröffentlicht]: https://github.com/Jo-Highness/hausarbeit/compare/v0.1.5...HEAD
+[0.1.5]: https://github.com/Jo-Highness/hausarbeit/compare/v0.1.4...v0.1.5
 [0.1.0]: https://github.com/Jo-Highness/hausarbeit/releases/tag/v0.1.0
