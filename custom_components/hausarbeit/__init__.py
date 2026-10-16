@@ -1,19 +1,24 @@
 """Hausarbeit-Tracker — Integration Setup.
 
-Ein Config-Entry pro Haushalt. Registriert Coordinator, Sensor-Plattform, Services,
-die WebSocket-API und liefert die drei Lovelace-Karten automatisch als Frontend-
-Ressource aus (kein separates HACS-Frontend-Paket nötig).
+Genau ein Config-Entry pro Haushalt (``single_config_entry``). Services und die
+WebSocket-API werden einmalig in ``async_setup`` registriert und lösen den geladenen
+Entry erst beim Aufruf auf. Die drei Lovelace-Karten werden automatisch als
+Frontend-Modul ausgeliefert (kein separates HACS-Frontend-Paket nötig).
 """
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
 import os
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers.typing import ConfigType
 import voluptuous as vol
 
 from . import websocket as ws_api
@@ -41,7 +46,6 @@ from .const import (
     MAX_POINTS,
     MIN_POINTS,
     PERIODS,
-    PLATFORMS,
     SERVICE_ADD_PERSON,
     SERVICE_ADD_TASK,
     SERVICE_CORRECT_EXECUTION,
@@ -56,6 +60,13 @@ from .const import (
     VERSION,
 )
 from .coordinator import HausarbeitCoordinator, HausarbeitError
+from .store import HausarbeitStore
+from .validation import color_value
+
+type HausarbeitConfigEntry = ConfigEntry[HausarbeitCoordinator]
+
+PLATFORMS: list[Platform] = [Platform.SENSOR]
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 # Punkte/Gewicht: gleiche Grenzen wie der Selektor in services.yaml (0..100).
 POINTS_SCHEMA = vol.All(vol.Coerce(float), vol.Range(min=MIN_POINTS, max=MAX_POINTS))
@@ -63,53 +74,45 @@ POINTS_SCHEMA = vol.All(vol.Coerce(float), vol.Range(min=MIN_POINTS, max=MAX_POI
 _LOGGER = logging.getLogger(__name__)
 
 _STATIC_REGISTERED = f"{DOMAIN}_static_registered"
-_SERVICES_REGISTERED = f"{DOMAIN}_services_registered"
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Services und WebSocket-Kommandos einmalig registrieren."""
+    _async_register_services(hass)
+    ws_api.async_register(hass)
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: HausarbeitConfigEntry) -> bool:
     """Config-Entry einrichten."""
-    hass.data.setdefault(DOMAIN, {})
-
     coordinator = HausarbeitCoordinator(hass, entry)
     await coordinator.async_init()
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     await _async_register_frontend(hass)
-    ws_api.async_register(hass)
-    _async_register_services(hass)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    coordinator.async_start_timer()
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HausarbeitConfigEntry) -> bool:
     """Config-Entry entladen."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id, None)
-        if not hass.data[DOMAIN]:
-            # letzter Entry -> Services abmelden
-            for service in (
-                SERVICE_LOG_EXECUTION,
-                SERVICE_DELETE_EXECUTION,
-                SERVICE_CORRECT_EXECUTION,
-                SERVICE_ADD_TASK,
-                SERVICE_UPDATE_TASK,
-                SERVICE_REMOVE_TASK,
-                SERVICE_ADD_PERSON,
-                SERVICE_UPDATE_PERSON,
-                SERVICE_REMOVE_PERSON,
-                SERVICE_SET_TARGET,
-                SERVICE_REMOVE_TARGET,
-            ):
-                if hass.services.has_service(DOMAIN, service):
-                    hass.services.async_remove(DOMAIN, service)
-            hass.data.pop(_SERVICES_REGISTERED, None)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_remove_entry(hass: HomeAssistant, entry: HausarbeitConfigEntry) -> None:
+    """Beim Löschen der Integration auch die gespeicherten Daten entfernen.
+
+    Der Store-Schlüssel ``hausarbeit_data`` bleibt aus Kompatibilitätsgründen global
+    (es gibt nur einen Entry). Ohne dieses Aufräumen würde eine Neuinstallation die
+    alten Personen/Aufgaben/Log-Einträge wieder einlesen.
+    """
+    await HausarbeitStore(hass).async_remove()
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: HausarbeitConfigEntry) -> None:
     """Bei geänderten Optionen Sensoren neu laden."""
     await hass.config_entries.async_reload(entry.entry_id)
 
@@ -156,27 +159,22 @@ async def _async_register_frontend(hass: HomeAssistant) -> None:
 # --------------------------------------------------------------------------- #
 # Services
 # --------------------------------------------------------------------------- #
-def _first_coordinator(hass: HomeAssistant) -> HausarbeitCoordinator:
-    coordinators = [
-        c for c in hass.data.get(DOMAIN, {}).values() if isinstance(c, HausarbeitCoordinator)
-    ]
-    if not coordinators:
-        raise ServiceValidationError("Hausarbeit-Tracker ist nicht eingerichtet.")
-    return coordinators[0]
+def _loaded_coordinator(hass: HomeAssistant) -> HausarbeitCoordinator:
+    """Coordinator des geladenen Entries — oder übersetzter Fehler."""
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.state is ConfigEntryState.LOADED:
+            return entry.runtime_data
+    raise ServiceValidationError(translation_domain=DOMAIN, translation_key="not_loaded")
 
 
 def _async_register_services(hass: HomeAssistant) -> None:
-    if hass.data.get(_SERVICES_REGISTERED):
-        return
-
     def coord() -> HausarbeitCoordinator:
-        return _first_coordinator(hass)
+        return _loaded_coordinator(hass)
 
     # Die Coordinator-Methoden sind nicht-blockierend (nur In-Memory + debounced save),
     # daher direkt im Event-Loop ausführbar.
     def log_execution(call: ServiceCall):
-        c = coord()
-        ex = c.log_execution(
+        ex = coord().log_execution(
             call.data[F_PERSON_ID],
             call.data[F_TASK_ID],
             ts=call.data.get(F_TIMESTAMP),
@@ -247,22 +245,30 @@ def _async_register_services(hass: HomeAssistant) -> None:
     def remove_target(call: ServiceCall):
         coord().remove_target(call.data[ATTR_TARGET_ID])
 
-    def make(func, returns: bool = False):
+    def make(func: Callable[[ServiceCall], dict | None], returns: bool = False):
         async def handler(call: ServiceCall):
             try:
                 result = func(call)
             except HausarbeitError as err:
-                raise ServiceValidationError(str(err)) from err
+                raise ServiceValidationError(
+                    str(err),
+                    translation_domain=DOMAIN,
+                    translation_key=err.translation_key,
+                    translation_placeholders=err.translation_placeholders,
+                ) from err
             except HomeAssistantError:
                 raise
             except Exception as err:
+                _LOGGER.exception("Unexpected error in service %s", call.service)
                 raise HomeAssistantError(str(err)) from err
             return result if returns else None
 
         return handler
 
-    from homeassistant.core import SupportsResponse
-
+    # (name, handler, schema, response, admin_only)
+    # Erledigungen melden darf jede*r (auch Nicht-Admins, z. B. Kinder per Dashboard-
+    # Button). Alles, was Stammdaten ändert oder Log-Einträge löscht/umschreibt, ist
+    # Admins vorbehalten — Automationen/Skripte (ohne Benutzer-Kontext) dürfen alles.
     services = [
         (
             SERVICE_LOG_EXECUTION,
@@ -276,16 +282,14 @@ def _async_register_services(hass: HomeAssistant) -> None:
                 }
             ),
             SupportsResponse.OPTIONAL,
+            False,
         ),
         (
             SERVICE_DELETE_EXECUTION,
             make(delete_execution),
-            vol.Schema(
-                {
-                    vol.Required(ATTR_EXECUTION_ID): cv.string,
-                }
-            ),
+            vol.Schema({vol.Required(ATTR_EXECUTION_ID): cv.string}),
             SupportsResponse.NONE,
+            True,
         ),
         (
             SERVICE_CORRECT_EXECUTION,
@@ -300,6 +304,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
                 }
             ),
             SupportsResponse.NONE,
+            True,
         ),
         (
             SERVICE_ADD_TASK,
@@ -314,6 +319,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
                 }
             ),
             SupportsResponse.OPTIONAL,
+            True,
         ),
         (
             SERVICE_UPDATE_TASK,
@@ -329,16 +335,14 @@ def _async_register_services(hass: HomeAssistant) -> None:
                 }
             ),
             SupportsResponse.NONE,
+            True,
         ),
         (
             SERVICE_REMOVE_TASK,
             make(remove_task),
-            vol.Schema(
-                {
-                    vol.Required(F_TASK_ID): cv.string,
-                }
-            ),
+            vol.Schema({vol.Required(F_TASK_ID): cv.string}),
             SupportsResponse.NONE,
+            True,
         ),
         (
             SERVICE_ADD_PERSON,
@@ -347,11 +351,12 @@ def _async_register_services(hass: HomeAssistant) -> None:
                 {
                     vol.Required(F_NAME): cv.string,
                     vol.Optional(F_ICON): cv.string,
-                    vol.Optional(F_COLOR): cv.string,
+                    vol.Optional(F_COLOR): color_value,
                     vol.Optional(F_HA_PERSON): cv.string,
                 }
             ),
             SupportsResponse.OPTIONAL,
+            True,
         ),
         (
             SERVICE_UPDATE_PERSON,
@@ -361,21 +366,19 @@ def _async_register_services(hass: HomeAssistant) -> None:
                     vol.Required(F_PERSON_ID): cv.string,
                     vol.Optional(F_NAME): cv.string,
                     vol.Optional(F_ICON): cv.string,
-                    vol.Optional(F_COLOR): cv.string,
+                    vol.Optional(F_COLOR): color_value,
                     vol.Optional(F_HA_PERSON): cv.string,
                 }
             ),
             SupportsResponse.NONE,
+            True,
         ),
         (
             SERVICE_REMOVE_PERSON,
             make(remove_person),
-            vol.Schema(
-                {
-                    vol.Required(F_PERSON_ID): cv.string,
-                }
-            ),
+            vol.Schema({vol.Required(F_PERSON_ID): cv.string}),
             SupportsResponse.NONE,
+            True,
         ),
         (
             SERVICE_SET_TARGET,
@@ -389,22 +392,23 @@ def _async_register_services(hass: HomeAssistant) -> None:
                 }
             ),
             SupportsResponse.OPTIONAL,
+            True,
         ),
         (
             SERVICE_REMOVE_TARGET,
             make(remove_target),
-            vol.Schema(
-                {
-                    vol.Required(ATTR_TARGET_ID): cv.string,
-                }
-            ),
+            vol.Schema({vol.Required(ATTR_TARGET_ID): cv.string}),
             SupportsResponse.NONE,
+            True,
         ),
     ]
 
-    for name, handler, schema, response in services:
-        hass.services.async_register(
-            DOMAIN, name, handler, schema=schema, supports_response=response
-        )
-
-    hass.data[_SERVICES_REGISTERED] = True
+    for name, handler, schema, response, admin_only in services:
+        if admin_only:
+            async_register_admin_service(
+                hass, DOMAIN, name, handler, schema=schema, supports_response=response
+            )
+        else:
+            hass.services.async_register(
+                DOMAIN, name, handler, schema=schema, supports_response=response
+            )

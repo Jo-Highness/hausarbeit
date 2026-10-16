@@ -8,11 +8,24 @@ komplett über die HA-Oberfläche, ohne YAML.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant import config_entries
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.selector import (
+    BooleanSelector,
+    EntitySelector,
+    EntitySelectorConfig,
+    IconSelector,
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+    TextSelector,
+)
 import voluptuous as vol
 
 from .const import (
@@ -42,29 +55,107 @@ from .const import (
     PERIODS,
 )
 from .coordinator import HausarbeitCoordinator, HausarbeitError
+from .validation import is_valid_color
 
-# Punkte/Gewicht: gleiche Grenzen wie der Selektor in services.yaml (0..100).
-POINTS_SCHEMA = vol.All(vol.Coerce(float), vol.Range(min=MIN_POINTS, max=MAX_POINTS))
+if TYPE_CHECKING:
+    from . import HausarbeitConfigEntry
 
-WEEKDAYS = {
-    0: "Montag",
-    1: "Dienstag",
-    2: "Mittwoch",
-    3: "Donnerstag",
-    4: "Freitag",
-    5: "Samstag",
-    6: "Sonntag",
-}
+_WEEK_START_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=[str(day) for day in range(7)],
+        translation_key="week_start",
+        mode=SelectSelectorMode.DROPDOWN,
+    )
+)
+_PERIOD_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=list(PERIODS),
+        translation_key="period",
+        mode=SelectSelectorMode.LIST,
+    )
+)
+_STATS_DAYS_SELECTOR = NumberSelector(
+    NumberSelectorConfig(
+        min=MIN_STATS_DAYS, max=MAX_STATS_DAYS, step=1, mode=NumberSelectorMode.BOX
+    )
+)
+_POINTS_SELECTOR = NumberSelector(
+    NumberSelectorConfig(min=MIN_POINTS, max=MAX_POINTS, step=0.5, mode=NumberSelectorMode.BOX)
+)
+_COUNT_SELECTOR = NumberSelector(
+    NumberSelectorConfig(min=1, max=1000, step=1, mode=NumberSelectorMode.BOX)
+)
+_PERSON_ENTITY_SELECTOR = EntitySelector(EntitySelectorConfig(domain="person"))
+
+
+def _choice(options: dict[str, str]) -> SelectSelector:
+    """Dropdown aus {id: label}."""
+    return SelectSelector(
+        SelectSelectorConfig(
+            options=[SelectOptionDict(value=k, label=v) for k, v in options.items()],
+            mode=SelectSelectorMode.DROPDOWN,
+        )
+    )
+
+
+def _person_schema(defaults: dict[str, Any]) -> vol.Schema:
+    """Formular Person anlegen/bearbeiten.
+
+    Optionale Felder nutzen ``suggested_value`` statt ``default``, damit sie sich
+    im Bearbeiten-Formular wieder leeren lassen.
+    """
+    return vol.Schema(
+        {
+            vol.Required(F_NAME, default=defaults.get(F_NAME, vol.UNDEFINED)): TextSelector(),
+            vol.Optional(
+                F_ICON, description={"suggested_value": defaults.get(F_ICON) or "mdi:account"}
+            ): IconSelector(),
+            vol.Optional(
+                F_COLOR, description={"suggested_value": defaults.get(F_COLOR)}
+            ): TextSelector(),
+            vol.Optional(
+                F_HA_PERSON, description={"suggested_value": defaults.get(F_HA_PERSON)}
+            ): _PERSON_ENTITY_SELECTOR,
+        }
+    )
+
+
+def _task_schema(defaults: dict[str, Any]) -> vol.Schema:
+    return vol.Schema(
+        {
+            vol.Required(F_NAME, default=defaults.get(F_NAME, vol.UNDEFINED)): TextSelector(),
+            vol.Optional(
+                F_ICON, description={"suggested_value": defaults.get(F_ICON) or "mdi:broom"}
+            ): IconSelector(),
+            vol.Optional(
+                F_CATEGORY, description={"suggested_value": defaults.get(F_CATEGORY)}
+            ): TextSelector(),
+            vol.Optional(F_POINTS, default=defaults.get(F_POINTS, 1)): _POINTS_SELECTOR,
+            vol.Optional(F_ACTIVE, default=defaults.get(F_ACTIVE, True)): BooleanSelector(),
+        }
+    )
+
+
+def _person_input(user_input: dict[str, Any]) -> tuple[dict[str, Any], dict[str, str]]:
+    """Formulardaten -> Felder (fehlende optionale Felder = leeren) + Feldfehler."""
+    errors: dict[str, str] = {}
+    color = (user_input.get(F_COLOR) or "").strip() or None
+    if color is not None and not is_valid_color(color):
+        errors[F_COLOR] = "invalid_color"
+    return {
+        F_NAME: user_input.get(F_NAME, ""),
+        F_ICON: user_input.get(F_ICON) or None,
+        F_COLOR: color,
+        F_HA_PERSON: user_input.get(F_HA_PERSON) or None,
+    }, errors
 
 
 class HausarbeitConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Ersteinrichtung — ein Eintrag pro Haushalt."""
+    """Ersteinrichtung — genau ein Eintrag (``single_config_entry`` im Manifest)."""
 
     VERSION = 1
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None):
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
         if user_input is not None:
             return self.async_create_entry(
                 title=user_input.get("title") or DEFAULT_TITLE,
@@ -76,12 +167,12 @@ class HausarbeitConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Optional("title", default=DEFAULT_TITLE): cv.string}),
+            data_schema=vol.Schema({vol.Optional("title", default=DEFAULT_TITLE): TextSelector()}),
         )
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(config_entry: HausarbeitConfigEntry):
         return HausarbeitOptionsFlow()
 
 
@@ -95,8 +186,8 @@ class HausarbeitOptionsFlow(config_entries.OptionsFlow):
     _selected: str | None = None
 
     @property
-    def _coord(self) -> HausarbeitCoordinator | None:
-        return self.hass.data.get(DOMAIN, {}).get(self.config_entry.entry_id)
+    def _coord(self) -> HausarbeitCoordinator:
+        return self.config_entry.runtime_data
 
     # -- Hauptmenü ---------------------------------------------------------
     async def async_step_init(self, user_input=None):
@@ -121,11 +212,12 @@ class HausarbeitOptionsFlow(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        CONF_WEEK_START, default=opts.get(CONF_WEEK_START, DEFAULT_WEEK_START)
-                    ): vol.In(WEEKDAYS),
+                        CONF_WEEK_START,
+                        default=str(opts.get(CONF_WEEK_START, DEFAULT_WEEK_START)),
+                    ): _WEEK_START_SELECTOR,
                     vol.Required(
                         CONF_STATS_DAYS, default=opts.get(CONF_STATS_DAYS, DEFAULT_STATS_DAYS)
-                    ): vol.All(vol.Coerce(int), vol.Range(min=MIN_STATS_DAYS, max=MAX_STATS_DAYS)),
+                    ): _STATS_DAYS_SELECTOR,
                 }
             ),
         )
@@ -139,28 +231,26 @@ class HausarbeitOptionsFlow(config_entries.OptionsFlow):
         )
 
     async def async_step_person_add(self, user_input=None):
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
-            try:
-                self._coord.add_person(
-                    user_input[F_NAME],
-                    icon=user_input.get(F_ICON) or None,
-                    color=user_input.get(F_COLOR) or None,
-                    ha_person_entity=user_input.get(F_HA_PERSON) or None,
-                )
-                return await self.async_step_persons()
-            except HausarbeitError as err:
-                errors["base"] = "invalid"
-                self._err = str(err)
+            fields, errors = _person_input(user_input)
+            if not errors:
+                try:
+                    self._coord.add_person(
+                        fields[F_NAME],
+                        icon=fields[F_ICON],
+                        color=fields[F_COLOR],
+                        ha_person_entity=fields[F_HA_PERSON],
+                    )
+                    return await self.async_step_persons()
+                except HausarbeitError:
+                    errors["base"] = "invalid"
         return self.async_show_form(
             step_id="person_add",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(F_NAME): cv.string,
-                    vol.Optional(F_ICON, default="mdi:account"): cv.string,
-                    vol.Optional(F_COLOR, default=""): cv.string,
-                    vol.Optional(F_HA_PERSON, default=""): cv.string,
-                }
+            data_schema=(
+                self.add_suggested_values_to_schema(_person_schema({}), user_input)
+                if user_input is not None
+                else _person_schema({})
             ),
             errors=errors,
         )
@@ -174,7 +264,7 @@ class HausarbeitOptionsFlow(config_entries.OptionsFlow):
             return await self.async_step_person_edit_form()
         return self.async_show_form(
             step_id="person_edit",
-            data_schema=vol.Schema({vol.Required("person"): vol.In(persons)}),
+            data_schema=vol.Schema({vol.Required("person"): _choice(persons)}),
         )
 
     async def async_step_person_edit_form(self, user_input=None):
@@ -182,31 +272,20 @@ class HausarbeitOptionsFlow(config_entries.OptionsFlow):
         if person is None:
             self._selected = None
             return await self.async_step_persons()
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
-            try:
-                self._coord.update_person(
-                    self._selected,
-                    name=user_input[F_NAME],
-                    icon=user_input.get(F_ICON) or None,
-                    color=user_input.get(F_COLOR) or None,
-                    ha_person_entity=user_input.get(F_HA_PERSON) or None,
-                )
-                self._selected = None
-                return await self.async_step_persons()
-            except HausarbeitError:
-                errors["base"] = "invalid"
+            fields, errors = _person_input(user_input)
+            if not errors:
+                try:
+                    self._coord.update_person(self._selected, **fields)
+                    self._selected = None
+                    return await self.async_step_persons()
+                except HausarbeitError:
+                    errors["base"] = "invalid"
         return self.async_show_form(
             step_id="person_edit_form",
             errors=errors,
-            data_schema=vol.Schema(
-                {
-                    vol.Required(F_NAME, default=person.get(F_NAME, "")): cv.string,
-                    vol.Optional(F_ICON, default=person.get(F_ICON) or "mdi:account"): cv.string,
-                    vol.Optional(F_COLOR, default=person.get(F_COLOR) or ""): cv.string,
-                    vol.Optional(F_HA_PERSON, default=person.get(F_HA_PERSON) or ""): cv.string,
-                }
-            ),
+            data_schema=_person_schema(person),
         )
 
     async def async_step_person_remove(self, user_input=None):
@@ -218,7 +297,7 @@ class HausarbeitOptionsFlow(config_entries.OptionsFlow):
             return await self.async_step_persons()
         return self.async_show_form(
             step_id="person_remove",
-            data_schema=vol.Schema({vol.Required("person"): vol.In(persons)}),
+            data_schema=vol.Schema({vol.Required("person"): _choice(persons)}),
         )
 
     # -- Aufgaben ----------------------------------------------------------
@@ -230,11 +309,11 @@ class HausarbeitOptionsFlow(config_entries.OptionsFlow):
         )
 
     async def async_step_task_add(self, user_input=None):
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             try:
                 self._coord.add_task(
-                    user_input[F_NAME],
+                    user_input.get(F_NAME, ""),
                     icon=user_input.get(F_ICON) or None,
                     category=user_input.get(F_CATEGORY) or None,
                     points=user_input.get(F_POINTS),
@@ -246,15 +325,7 @@ class HausarbeitOptionsFlow(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="task_add",
             errors=errors,
-            data_schema=vol.Schema(
-                {
-                    vol.Required(F_NAME): cv.string,
-                    vol.Optional(F_ICON, default="mdi:broom"): cv.string,
-                    vol.Optional(F_CATEGORY, default=""): cv.string,
-                    vol.Optional(F_POINTS, default=1): POINTS_SCHEMA,
-                    vol.Optional(F_ACTIVE, default=True): cv.boolean,
-                }
-            ),
+            data_schema=_task_schema({}),
         )
 
     async def async_step_task_edit(self, user_input=None):
@@ -266,7 +337,7 @@ class HausarbeitOptionsFlow(config_entries.OptionsFlow):
             return await self.async_step_task_edit_form()
         return self.async_show_form(
             step_id="task_edit",
-            data_schema=vol.Schema({vol.Required("task"): vol.In(tasks)}),
+            data_schema=vol.Schema({vol.Required("task"): _choice(tasks)}),
         )
 
     async def async_step_task_edit_form(self, user_input=None):
@@ -274,12 +345,12 @@ class HausarbeitOptionsFlow(config_entries.OptionsFlow):
         if task is None:
             self._selected = None
             return await self.async_step_tasks()
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             try:
                 self._coord.update_task(
                     self._selected,
-                    name=user_input[F_NAME],
+                    name=user_input.get(F_NAME, ""),
                     icon=user_input.get(F_ICON) or None,
                     category=user_input.get(F_CATEGORY) or None,
                     points=user_input.get(F_POINTS),
@@ -292,15 +363,7 @@ class HausarbeitOptionsFlow(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="task_edit_form",
             errors=errors,
-            data_schema=vol.Schema(
-                {
-                    vol.Required(F_NAME, default=task.get(F_NAME, "")): cv.string,
-                    vol.Optional(F_ICON, default=task.get(F_ICON) or "mdi:broom"): cv.string,
-                    vol.Optional(F_CATEGORY, default=task.get(F_CATEGORY) or ""): cv.string,
-                    vol.Optional(F_POINTS, default=task.get(F_POINTS, 1)): POINTS_SCHEMA,
-                    vol.Optional(F_ACTIVE, default=task.get(F_ACTIVE, True)): cv.boolean,
-                }
-            ),
+            data_schema=_task_schema(task),
         )
 
     async def async_step_task_remove(self, user_input=None):
@@ -312,7 +375,7 @@ class HausarbeitOptionsFlow(config_entries.OptionsFlow):
             return await self.async_step_tasks()
         return self.async_show_form(
             step_id="task_remove",
-            data_schema=vol.Schema({vol.Required("task"): vol.In(tasks)}),
+            data_schema=vol.Schema({vol.Required("task"): _choice(tasks)}),
         )
 
     # -- Soll-Vorgaben -----------------------------------------------------
@@ -335,7 +398,7 @@ class HausarbeitOptionsFlow(config_entries.OptionsFlow):
                     user_input[F_PERSON_ID],
                     user_input[F_TASK_ID],
                     user_input[F_PERIOD],
-                    user_input[F_COUNT],
+                    int(user_input[F_COUNT]),
                 )
                 return await self.async_step_targets()
             except HausarbeitError:
@@ -344,10 +407,10 @@ class HausarbeitOptionsFlow(config_entries.OptionsFlow):
             step_id="target_add",
             data_schema=vol.Schema(
                 {
-                    vol.Required(F_PERSON_ID): vol.In(persons),
-                    vol.Required(F_TASK_ID): vol.In(tasks),
-                    vol.Required(F_PERIOD, default=PERIOD_WEEK): vol.In(list(PERIODS)),
-                    vol.Required(F_COUNT, default=1): vol.All(vol.Coerce(int), vol.Range(min=1)),
+                    vol.Required(F_PERSON_ID): _choice(persons),
+                    vol.Required(F_TASK_ID): _choice(tasks),
+                    vol.Required(F_PERIOD, default=PERIOD_WEEK): _PERIOD_SELECTOR,
+                    vol.Required(F_COUNT, default=1): _COUNT_SELECTOR,
                 }
             ),
             errors=errors,
@@ -368,5 +431,5 @@ class HausarbeitOptionsFlow(config_entries.OptionsFlow):
             return await self.async_step_targets()
         return self.async_show_form(
             step_id="target_remove",
-            data_schema=vol.Schema({vol.Required("target"): vol.In(targets)}),
+            data_schema=vol.Schema({vol.Required("target"): _choice(targets)}),
         )
