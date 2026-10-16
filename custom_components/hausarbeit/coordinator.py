@@ -14,8 +14,9 @@ import math
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_track_time_change
 from homeassistant.util import dt as dt_util
 
 from . import store as store_mod
@@ -40,6 +41,7 @@ from .const import (
     F_POINTS,
     F_TASK_ID,
     F_TIMESTAMP,
+    F_USER_ID,
     ID_PREFIX_EXECUTION,
     ID_PREFIX_PERSON,
     ID_PREFIX_TARGET,
@@ -66,14 +68,40 @@ from .targets import (
 _LOGGER = logging.getLogger(__name__)
 
 
+# Englische Fallback-Texte; die übersetzten Texte stehen unter "exceptions" in
+# strings.json / translations/*.json (gleicher Schlüssel).
+_ERROR_MESSAGES: dict[str, str] = {
+    "person_not_found": "Person {id} not found.",
+    "task_not_found": "Task {id} not found.",
+    "target_not_found": "Target {id} not found.",
+    "execution_not_found": "Execution {id} not found.",
+    "empty_person_name": "The person's name must not be empty.",
+    "empty_task_name": "The task's name must not be empty.",
+    "invalid_points": "Points must be a number between {min} and {max}.",
+    "invalid_period": "Invalid period: {period}.",
+    "invalid_count": "The target count must be a whole number greater than 0.",
+    "invalid_timestamp": "Invalid timestamp: {ts}.",
+}
+
+
 class HausarbeitError(Exception):
-    """Fachlicher Fehler (z. B. unbekannte Person/Aufgabe)."""
+    """Fachlicher Fehler (z. B. unbekannte Person/Aufgabe).
+
+    Trägt einen Übersetzungsschlüssel (Abschnitt ``exceptions``) und Platzhalter,
+    damit Services übersetzte ``ServiceValidationError`` werfen können.
+    """
+
+    def __init__(self, translation_key: str, **placeholders: Any) -> None:
+        self.translation_key = translation_key
+        self.translation_placeholders = {k: str(v) for k, v in placeholders.items()}
+        template = _ERROR_MESSAGES.get(translation_key, translation_key)
+        super().__init__(template.format(**self.translation_placeholders))
 
 
-def _check_name(name: Any, message: str) -> str:
+def _check_name(name: Any, translation_key: str) -> str:
     """Namen trimmen; leer/None ist ungültig (gleiche Regel wie beim Anlegen)."""
     if name is None or not str(name).strip():
-        raise HausarbeitError(message)
+        raise HausarbeitError(translation_key)
     return str(name).strip()
 
 
@@ -82,9 +110,11 @@ def _check_points(points: Any) -> float:
     try:
         value = float(points)
     except (TypeError, ValueError) as err:
-        raise HausarbeitError("Punkte müssen eine Zahl sein.") from err
+        raise HausarbeitError(
+            "invalid_points", min=f"{MIN_POINTS:g}", max=f"{MAX_POINTS:g}"
+        ) from err
     if not math.isfinite(value) or not MIN_POINTS <= value <= MAX_POINTS:
-        raise HausarbeitError(f"Punkte müssen zwischen {MIN_POINTS:g} und {MAX_POINTS:g} liegen.")
+        raise HausarbeitError("invalid_points", min=f"{MIN_POINTS:g}", max=f"{MAX_POINTS:g}")
     return value
 
 
@@ -98,6 +128,24 @@ class HausarbeitCoordinator:
 
     async def async_init(self) -> None:
         await self.store.async_load()
+
+    @callback
+    def async_start_timer(self) -> None:
+        """Zeitgesteuerte Aktualisierung starten (stündlich, inkl. lokaler Mitternacht).
+
+        Ohne Datenänderung würden „heute"/7/30/90-Tage-Fenster, der Tempo-Wert
+        ``im_soll`` und die laufende Periode (Tag/Woche/Monat) sonst veralten.
+        Alle Perioden-Grenzen liegen auf lokaler Mitternacht, die gleitenden Fenster
+        werden mindestens stündlich nachgeführt. ``async_track_time_change`` arbeitet
+        in der lokalen HA-Zeitzone.
+        """
+        self.entry.async_on_unload(
+            async_track_time_change(self.hass, self._async_handle_tick, minute=0, second=0)
+        )
+
+    @callback
+    def _async_handle_tick(self, _now: datetime) -> None:
+        self._notify()
 
     # -- Optionen ----------------------------------------------------------
     @property
@@ -141,7 +189,7 @@ class HausarbeitCoordinator:
         ha_person_entity: str | None = None,
     ) -> dict:
         if not name or not str(name).strip():
-            raise HausarbeitError("Name der Person darf nicht leer sein.")
+            raise HausarbeitError("empty_person_name")
         person = {
             F_ID: store_mod.new_id(ID_PREFIX_PERSON),
             F_NAME: str(name).strip(),
@@ -156,16 +204,16 @@ class HausarbeitCoordinator:
 
     def update_person(self, person_id: str, **changes: Any) -> dict:
         if F_NAME in changes:
-            changes[F_NAME] = _check_name(changes[F_NAME], "Name der Person darf nicht leer sein.")
+            changes[F_NAME] = _check_name(changes[F_NAME], "empty_person_name")
         item = self.store.update(self.store.persons, person_id, changes)
         if item is None:
-            raise HausarbeitError(f"Person {person_id} nicht gefunden.")
+            raise HausarbeitError("person_not_found", id=person_id)
         self._notify()
         return item
 
     def remove_person(self, person_id: str) -> None:
         if not self.store.remove(self.store.persons, person_id):
-            raise HausarbeitError(f"Person {person_id} nicht gefunden.")
+            raise HausarbeitError("person_not_found", id=person_id)
         # zugehörige Soll-Vorgaben entfernen (Ausführungs-Log bleibt als Rohdaten erhalten)
         self.store.replace_all(
             STORE_TARGETS,
@@ -185,7 +233,7 @@ class HausarbeitCoordinator:
         active: bool | None = None,
     ) -> dict:
         if not name or not str(name).strip():
-            raise HausarbeitError("Name der Aufgabe darf nicht leer sein.")
+            raise HausarbeitError("empty_task_name")
         task = {
             F_ID: store_mod.new_id(ID_PREFIX_TASK),
             F_NAME: str(name).strip(),
@@ -201,18 +249,18 @@ class HausarbeitCoordinator:
 
     def update_task(self, task_id: str, **changes: Any) -> dict:
         if F_NAME in changes:
-            changes[F_NAME] = _check_name(changes[F_NAME], "Name der Aufgabe darf nicht leer sein.")
+            changes[F_NAME] = _check_name(changes[F_NAME], "empty_task_name")
         if changes.get(F_POINTS) is not None:
             changes[F_POINTS] = _check_points(changes[F_POINTS])
         item = self.store.update(self.store.tasks, task_id, changes)
         if item is None:
-            raise HausarbeitError(f"Aufgabe {task_id} nicht gefunden.")
+            raise HausarbeitError("task_not_found", id=task_id)
         self._notify()
         return item
 
     def remove_task(self, task_id: str) -> None:
         if not self.store.remove(self.store.tasks, task_id):
-            raise HausarbeitError(f"Aufgabe {task_id} nicht gefunden.")
+            raise HausarbeitError("task_not_found", id=task_id)
         self.store.replace_all(
             STORE_TARGETS,
             [t for t in self.store.targets if t.get(F_TASK_ID) != task_id],
@@ -224,17 +272,17 @@ class HausarbeitCoordinator:
     # ------------------------------------------------------------------ #
     def set_target(self, person_id: str, task_id: str, period: str, count: int) -> dict:
         if self.store.get_person(person_id) is None:
-            raise HausarbeitError(f"Person {person_id} nicht gefunden.")
+            raise HausarbeitError("person_not_found", id=person_id)
         if self.store.get_task(task_id) is None:
-            raise HausarbeitError(f"Aufgabe {task_id} nicht gefunden.")
+            raise HausarbeitError("task_not_found", id=task_id)
         if period not in PERIODS:
-            raise HausarbeitError(f"Ungültiger Perioden-Typ: {period}")
+            raise HausarbeitError("invalid_period", period=period)
         try:
             count = int(count)
         except (TypeError, ValueError) as err:
-            raise HausarbeitError("count muss eine ganze Zahl sein.") from err
+            raise HausarbeitError("invalid_count") from err
         if count <= 0:
-            raise HausarbeitError("count muss größer als 0 sein.")
+            raise HausarbeitError("invalid_count")
 
         existing = next(
             (
@@ -266,29 +314,43 @@ class HausarbeitCoordinator:
 
     def remove_target(self, target_id: str) -> None:
         if not self.store.remove(self.store.targets, target_id):
-            raise HausarbeitError(f"Soll-Vorgabe {target_id} nicht gefunden.")
+            raise HausarbeitError("target_not_found", id=target_id)
         self._notify()
 
     # ------------------------------------------------------------------ #
     # Ausführungen (Log)
     # ------------------------------------------------------------------ #
     def _normalize_ts(self, ts: Any) -> str:
+        """Beliebigen Zeitpunkt -> ISO-8601 in UTC (aware).
+
+        Zeitpunkte ohne Zeitzone (z. B. aus dem Datetime-Selektor der Services oder
+        ``2026-10-16T08:00`` per WebSocket) gelten als *lokale* HA-Zeit; Offsets wie
+        ``+02:00`` werden nach UTC umgerechnet, damit alle gespeicherten Werte gleich
+        aufgebaut sind.
+        """
         if ts is None:
             return dt_util.utcnow().isoformat()
+        local_tz = dt_util.get_default_time_zone()
         if isinstance(ts, datetime):
-            return dt_util.as_utc(ts).isoformat()
-        parsed = parse_ts(str(ts))
+            parsed: datetime | None = ts if ts.tzinfo else ts.replace(tzinfo=local_tz)
+        else:
+            parsed = parse_ts(str(ts), default_tz=local_tz)
         if parsed is None:
-            raise HausarbeitError(f"Ungültiger Zeitstempel: {ts!r}")
-        return parsed.isoformat()
+            raise HausarbeitError("invalid_timestamp", ts=ts)
+        return dt_util.as_utc(parsed).isoformat()
 
     def log_execution(
-        self, person_id: str, task_id: str, ts: Any = None, note: str | None = None
+        self,
+        person_id: str,
+        task_id: str,
+        ts: Any = None,
+        note: str | None = None,
+        user_id: str | None = None,
     ) -> dict:
         if self.store.get_person(person_id) is None:
-            raise HausarbeitError(f"Person {person_id} nicht gefunden.")
+            raise HausarbeitError("person_not_found", id=person_id)
         if self.store.get_task(task_id) is None:
-            raise HausarbeitError(f"Aufgabe {task_id} nicht gefunden.")
+            raise HausarbeitError("task_not_found", id=task_id)
         execution = {
             F_ID: store_mod.new_id(ID_PREFIX_EXECUTION),
             F_PERSON_ID: person_id,
@@ -296,6 +358,8 @@ class HausarbeitCoordinator:
             F_TIMESTAMP: self._normalize_ts(ts),
             F_NOTE: (note or "").strip(),
         }
+        if user_id:
+            execution[F_USER_ID] = user_id
         self.store.add(STORE_EXECUTIONS, execution)
         self.hass.bus.async_fire(
             EVENT_EXECUTION_LOGGED,
@@ -313,7 +377,7 @@ class HausarbeitCoordinator:
 
     def delete_execution(self, execution_id: str) -> None:
         if not self.store.remove(self.store.executions, execution_id):
-            raise HausarbeitError(f"Ausführung {execution_id} nicht gefunden.")
+            raise HausarbeitError("execution_not_found", id=execution_id)
         self._notify()
 
     def correct_execution(
@@ -326,14 +390,14 @@ class HausarbeitCoordinator:
     ) -> dict:
         execution = self.store.get_execution(execution_id)
         if execution is None:
-            raise HausarbeitError(f"Ausführung {execution_id} nicht gefunden.")
+            raise HausarbeitError("execution_not_found", id=execution_id)
         if person_id is not None:
             if self.store.get_person(person_id) is None:
-                raise HausarbeitError(f"Person {person_id} nicht gefunden.")
+                raise HausarbeitError("person_not_found", id=person_id)
             execution[F_PERSON_ID] = person_id
         if task_id is not None:
             if self.store.get_task(task_id) is None:
-                raise HausarbeitError(f"Aufgabe {task_id} nicht gefunden.")
+                raise HausarbeitError("task_not_found", id=task_id)
             execution[F_TASK_ID] = task_id
         if ts is not None:
             execution[F_TIMESTAMP] = self._normalize_ts(ts)
