@@ -5,7 +5,12 @@
       "user": {
         "title": "Configurar Hausarbeit-Tracker",
         "description": "Crea el hogar. Gestiona personas, tareas y objetivos después desde las opciones.",
-        "data": { "title": "Nombre del hogar" }
+        "data": {
+          "title": "Nombre del hogar"
+        },
+        "data_description": {
+          "title": "Se muestra como nombre del dispositivo, p. ej. «Casa»."
+        }
       }
     },
     "abort": {
@@ -28,6 +33,10 @@
         "data": {
           "week_start": "Inicio de semana",
           "stats_days": "Periodo de estadísticas (días)"
+        },
+        "data_description": {
+          "week_start": "Primer día de la semana para los objetivos semanales.",
+          "stats_days": "Periodo de los sensores de persona y de la tarjeta de estadísticas (1–3650 días)."
         }
       },
       "persons": {
@@ -45,9 +54,20 @@
           "icon": "Icono (mdi)",
           "color": "Color (opcional)",
           "ha_person_entity": "Entidad «person» de HA (opcional)"
+        },
+        "data_description": {
+          "name": "Se muestra en las tarjetas y en el nombre del sensor.",
+          "icon": "Icono Material Design, p. ej. mdi:account.",
+          "color": "Color CSS opcional para la tarjeta de registro, p. ej. #3f51b5 o teal. Vacío = color del tema.",
+          "ha_person_entity": "Vínculo opcional con una persona de Home Assistant."
         }
       },
-      "person_edit": { "title": "Seleccionar persona", "data": { "person": "Persona" } },
+      "person_edit": {
+        "title": "Seleccionar persona",
+        "data": {
+          "person": "Persona"
+        }
+      },
       "person_edit_form": {
         "title": "Editar persona",
         "data": {
@@ -55,12 +75,20 @@
           "icon": "Icono (mdi)",
           "color": "Color (opcional)",
           "ha_person_entity": "Entidad «person» de HA (opcional)"
+        },
+        "data_description": {
+          "name": "Se muestra en las tarjetas y en el nombre del sensor.",
+          "icon": "Icono Material Design, p. ej. mdi:account.",
+          "color": "Color CSS opcional para la tarjeta de registro, p. ej. #3f51b5 o teal. Vacío = color del tema.",
+          "ha_person_entity": "Vínculo opcional con una persona de Home Assistant."
         }
       },
       "person_remove": {
         "title": "Eliminar persona",
         "description": "Se eliminan los objetivos asociados. El registro de ejecuciones se conserva.",
-        "data": { "person": "Persona" }
+        "data": {
+          "person": "Persona"
+        }
       },
       "tasks": {
         "title": "Tareas",
@@ -78,9 +106,21 @@
           "category": "Categoría (opcional)",
           "points": "Puntos/peso",
           "active": "Activa"
+        },
+        "data_description": {
+          "name": "Nombre de la tarea, p. ej. «Vaciar el lavavajillas».",
+          "icon": "Icono Material Design, p. ej. mdi:dishwasher.",
+          "category": "Grupo opcional en texto libre, p. ej. Cocina.",
+          "points": "Peso de la tarea para las estadísticas de puntos (0–100, por defecto 1).",
+          "active": "Las tareas inactivas se ocultan en la tarjeta de registro, pero conservan su historial."
         }
       },
-      "task_edit": { "title": "Seleccionar tarea", "data": { "task": "Tarea" } },
+      "task_edit": {
+        "title": "Seleccionar tarea",
+        "data": {
+          "task": "Tarea"
+        }
+      },
       "task_edit_form": {
         "title": "Editar tarea",
         "data": {
@@ -89,12 +129,21 @@
           "category": "Categoría (opcional)",
           "points": "Puntos/peso",
           "active": "Activa"
+        },
+        "data_description": {
+          "name": "Nombre de la tarea, p. ej. «Vaciar el lavavajillas».",
+          "icon": "Icono Material Design, p. ej. mdi:dishwasher.",
+          "category": "Grupo opcional en texto libre, p. ej. Cocina.",
+          "points": "Peso de la tarea para las estadísticas de puntos (0–100, por defecto 1).",
+          "active": "Las tareas inactivas se ocultan en la tarjeta de registro, pero conservan su historial."
         }
       },
       "task_remove": {
         "title": "Eliminar tarea",
         "description": "Se eliminan los objetivos asociados. El registro de ejecuciones se conserva.",
-        "data": { "task": "Tarea" }
+        "data": {
+          "task": "Tarea"
+        }
       },
       "targets": {
         "title": "Objetivos",
@@ -111,14 +160,25 @@
           "task_id": "Tarea",
           "period": "Periodo",
           "count": "Objetivo por periodo"
+        },
+        "data_description": {
+          "person_id": "Quién debe hacerla.",
+          "task_id": "Qué tarea.",
+          "period": "Día, semana (ver inicio de semana) o mes natural.",
+          "count": "Cuántas veces por periodo."
         }
       },
       "target_remove": {
         "title": "Eliminar objetivo",
-        "data": { "target": "Objetivo" }
+        "data": {
+          "target": "Objetivo"
+        }
       }
     },
-    "error": { "invalid": "Entrada no válida. Por favor, revísala." },
+    "error": {
+      "invalid": "Entrada no válida. Por favor, revísala.",
+      "invalid_color": "Color no válido. Ejemplos: #3f51b5, teal o rgb(63, 81, 181)."
+    },
     "abort": {
       "need_person_and_task": "Crea primero al menos una persona y una tarea."
     }
@@ -126,8 +186,294 @@
   "selector": {
     "week_start": {
       "options": {
-        "0": "Lunes", "1": "Martes", "2": "Miércoles", "3": "Jueves",
-        "4": "Viernes", "5": "Sábado", "6": "Domingo"
+        "0": "Lunes",
+        "1": "Martes",
+        "2": "Miércoles",
+        "3": "Jueves",
+        "4": "Viernes",
+        "5": "Sábado",
+        "6": "Domingo"
+      }
+    },
+    "period": {
+      "options": {
+        "day": "Día",
+        "week": "Semana",
+        "month": "Mes"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "person": {
+        "name": "{person}",
+        "unit_of_measurement": "tareas"
+      },
+      "target_day": {
+        "name": "{person} · {task} (día)",
+        "unit_of_measurement": "tareas"
+      },
+      "target_week": {
+        "name": "{person} · {task} (semana)",
+        "unit_of_measurement": "tareas"
+      },
+      "target_month": {
+        "name": "{person} · {task} (mes)",
+        "unit_of_measurement": "tareas"
+      },
+      "last_done": {
+        "name": "{task} última vez"
+      }
+    }
+  },
+  "exceptions": {
+    "not_loaded": {
+      "message": "Hausarbeit-Tracker no está configurado o no está cargado."
+    },
+    "person_not_found": {
+      "message": "Persona {id} no encontrada."
+    },
+    "task_not_found": {
+      "message": "Tarea {id} no encontrada."
+    },
+    "target_not_found": {
+      "message": "Objetivo {id} no encontrado."
+    },
+    "execution_not_found": {
+      "message": "Registro {id} no encontrado."
+    },
+    "empty_person_name": {
+      "message": "El nombre de la persona no puede estar vacío."
+    },
+    "empty_task_name": {
+      "message": "El nombre de la tarea no puede estar vacío."
+    },
+    "invalid_points": {
+      "message": "Los puntos deben ser un número entre {min} y {max}."
+    },
+    "invalid_period": {
+      "message": "Periodo no válido: {period}."
+    },
+    "invalid_count": {
+      "message": "La cantidad objetivo debe ser un número entero mayor que 0."
+    },
+    "invalid_timestamp": {
+      "message": "Marca de tiempo no válida: {ts}."
+    }
+  },
+  "services": {
+    "log_execution": {
+      "name": "Registrar tarea hecha",
+      "description": "Registra que una persona ha hecho una tarea. Devuelve el nuevo execution_id.",
+      "fields": {
+        "person_id": {
+          "name": "Persona",
+          "description": "ID de la persona (per_…). Aparece en el atributo person_id del sensor de persona."
+        },
+        "task_id": {
+          "name": "Tarea",
+          "description": "ID de la tarea (tsk_…). Aparece en el atributo task_id del sensor «última vez»."
+        },
+        "ts": {
+          "name": "Momento",
+          "description": "Opcional, por defecto ahora; para registrar a posteriori. Sin zona horaria se usa la hora local de Home Assistant."
+        },
+        "note": {
+          "name": "Nota",
+          "description": "Nota opcional."
+        }
+      }
+    },
+    "delete_execution": {
+      "name": "Eliminar registro",
+      "description": "Elimina una ejecución registrada por su ID (solo administradores).",
+      "fields": {
+        "execution_id": {
+          "name": "ID de registro",
+          "description": "ID de la entrada (exe_…), p. ej. de la respuesta de log_execution o del evento hausarbeit_execution_logged."
+        }
+      }
+    },
+    "correct_execution": {
+      "name": "Corregir registro",
+      "description": "Cambia persona, tarea, momento o nota de una ejecución (solo administradores).",
+      "fields": {
+        "execution_id": {
+          "name": "ID de registro",
+          "description": "ID de la entrada (exe_…), p. ej. de la respuesta de log_execution o del evento hausarbeit_execution_logged."
+        },
+        "person_id": {
+          "name": "Persona (nuevo)",
+          "description": "ID de la persona (per_…). Aparece en el atributo person_id del sensor de persona."
+        },
+        "task_id": {
+          "name": "Tarea (nuevo)",
+          "description": "ID de la tarea (tsk_…). Aparece en el atributo task_id del sensor «última vez»."
+        },
+        "ts": {
+          "name": "Momento (nuevo)",
+          "description": "Opcional, por defecto ahora; para registrar a posteriori. Sin zona horaria se usa la hora local de Home Assistant."
+        },
+        "note": {
+          "name": "Nota (nuevo)",
+          "description": "Nota opcional."
+        }
+      }
+    },
+    "add_task": {
+      "name": "Crear tarea",
+      "description": "Crea una nueva tarea y devuelve su ID (solo administradores).",
+      "fields": {
+        "name": {
+          "name": "Nombre",
+          "description": "Nombre visible."
+        },
+        "icon": {
+          "name": "Icono",
+          "description": "Icono Material Design, p. ej. mdi:dishwasher."
+        },
+        "category": {
+          "name": "Categoría",
+          "description": "Grupo opcional en texto libre."
+        },
+        "points": {
+          "name": "Puntos",
+          "description": "Peso de la tarea para las estadísticas de puntos (0–100, por defecto 1)."
+        },
+        "active": {
+          "name": "Activa",
+          "description": "Las tareas inactivas se ocultan en la tarjeta de registro."
+        }
+      }
+    },
+    "update_task": {
+      "name": "Modificar tarea",
+      "description": "Modifica una tarea; los campos omitidos no cambian (solo administradores).",
+      "fields": {
+        "task_id": {
+          "name": "Tarea",
+          "description": "ID de la tarea (tsk_…). Aparece en el atributo task_id del sensor «última vez»."
+        },
+        "name": {
+          "name": "Nombre",
+          "description": "Nombre visible."
+        },
+        "icon": {
+          "name": "Icono",
+          "description": "Icono Material Design, p. ej. mdi:dishwasher."
+        },
+        "category": {
+          "name": "Categoría",
+          "description": "Grupo opcional en texto libre."
+        },
+        "points": {
+          "name": "Puntos",
+          "description": "Peso de la tarea para las estadísticas de puntos (0–100, por defecto 1)."
+        },
+        "active": {
+          "name": "Activa",
+          "description": "Las tareas inactivas se ocultan en la tarjeta de registro."
+        }
+      }
+    },
+    "remove_task": {
+      "name": "Eliminar tarea",
+      "description": "Elimina una tarea y sus objetivos. El historial se conserva (solo administradores).",
+      "fields": {
+        "task_id": {
+          "name": "Tarea",
+          "description": "ID de la tarea (tsk_…). Aparece en el atributo task_id del sensor «última vez»."
+        }
+      }
+    },
+    "add_person": {
+      "name": "Crear persona",
+      "description": "Crea una nueva persona y devuelve su ID (solo administradores).",
+      "fields": {
+        "name": {
+          "name": "Nombre",
+          "description": "Nombre visible."
+        },
+        "icon": {
+          "name": "Icono",
+          "description": "Icono Material Design, p. ej. mdi:dishwasher."
+        },
+        "color": {
+          "name": "Color",
+          "description": "Color CSS opcional, p. ej. #3f51b5. Un texto vacío lo elimina."
+        },
+        "ha_person_entity": {
+          "name": "Persona de Home Assistant",
+          "description": "Vínculo opcional con una entidad person.*."
+        }
+      }
+    },
+    "update_person": {
+      "name": "Modificar persona",
+      "description": "Modifica una persona; los campos omitidos no cambian (solo administradores).",
+      "fields": {
+        "person_id": {
+          "name": "Persona",
+          "description": "ID de la persona (per_…). Aparece en el atributo person_id del sensor de persona."
+        },
+        "name": {
+          "name": "Nombre",
+          "description": "Nombre visible."
+        },
+        "icon": {
+          "name": "Icono",
+          "description": "Icono Material Design, p. ej. mdi:dishwasher."
+        },
+        "color": {
+          "name": "Color",
+          "description": "Color CSS opcional, p. ej. #3f51b5. Un texto vacío lo elimina."
+        },
+        "ha_person_entity": {
+          "name": "Persona de Home Assistant",
+          "description": "Vínculo opcional con una entidad person.*."
+        }
+      }
+    },
+    "remove_person": {
+      "name": "Eliminar persona",
+      "description": "Elimina una persona y sus objetivos. El historial se conserva (solo administradores).",
+      "fields": {
+        "person_id": {
+          "name": "Persona",
+          "description": "ID de la persona (per_…). Aparece en el atributo person_id del sensor de persona."
+        }
+      }
+    },
+    "set_target": {
+      "name": "Definir objetivo",
+      "description": "Crea o cambia cuántas veces debe hacer una persona una tarea por periodo. Devuelve el target_id (solo administradores).",
+      "fields": {
+        "person_id": {
+          "name": "Persona",
+          "description": "ID de la persona (per_…). Aparece en el atributo person_id del sensor de persona."
+        },
+        "task_id": {
+          "name": "Tarea",
+          "description": "ID de la tarea (tsk_…). Aparece en el atributo task_id del sensor «última vez»."
+        },
+        "period": {
+          "name": "Periodo",
+          "description": "day, week o month."
+        },
+        "count": {
+          "name": "Cantidad objetivo",
+          "description": "Cuántas veces por periodo (≥ 1)."
+        }
+      }
+    },
+    "remove_target": {
+      "name": "Eliminar objetivo",
+      "description": "Elimina un objetivo (solo administradores).",
+      "fields": {
+        "target_id": {
+          "name": "ID de objetivo",
+          "description": "ID del objetivo (tgt_…). Aparece en el atributo target_id del sensor de objetivo."
+        }
       }
     }
   }

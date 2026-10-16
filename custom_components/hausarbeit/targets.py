@@ -9,7 +9,7 @@ Python aware-datetimes zeitzonenübergreifend vergleicht.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, timedelta, tzinfo
 
 from .const import (
     F_COUNT,
@@ -25,17 +25,22 @@ from .const import (
 )
 
 
-def parse_ts(value: str) -> datetime | None:
-    """ISO-8601 -> aware datetime (UTC). Gibt None bei Unparsebarem."""
-    if not value:
+def parse_ts(value: str, default_tz: tzinfo = UTC) -> datetime | None:
+    """ISO-8601 -> aware datetime. Gibt None bei Unparsebarem.
+
+    Werte ohne Zeitzone erhalten ``default_tz``. Gespeicherte Zeitstempel sind immer
+    aware (UTC); beim *Schreiben* übergibt der Coordinator die lokale HA-Zeitzone,
+    damit naive Eingaben als lokale Zeit gelten.
+    """
+    if not value or not isinstance(value, str):
         return None
     try:
-        text = value.replace("Z", "+00:00")
+        text = value.strip().replace("Z", "+00:00")
         dt = datetime.fromisoformat(text)
     except (ValueError, TypeError):
         return None
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=UTC)
+        dt = dt.replace(tzinfo=default_tz)
     return dt
 
 

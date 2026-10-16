@@ -14,7 +14,7 @@ from typing import Final
 # --------------------------------------------------------------------------- #
 DOMAIN: Final = "hausarbeit"
 NAME: Final = "Hausarbeit-Tracker"
-VERSION: Final = "0.1.5"  # muss mit manifest.json übereinstimmen (Frontend-Cache-Bust)
+VERSION: Final = "0.2.0"  # muss mit manifest.json übereinstimmen (Frontend-Cache-Bust)
 MANUFACTURER: Final = "hausarbeit"
 MODEL: Final = "Haushalt"
 
@@ -26,7 +26,7 @@ DEFAULT_TITLE: Final = "Hausarbeit"
 # --------------------------------------------------------------------------- #
 STORAGE_KEY: Final = "hausarbeit_data"
 STORAGE_VERSION: Final = 1  # Major-Schema-Version (async_migrate_func)
-STORAGE_MINOR_VERSION: Final = 1  # Minor-Version für vorwärtskompatible Ergänzungen
+STORAGE_MINOR_VERSION: Final = 2  # 2: Zeitstempel auf UTC normalisiert, optional user_id
 
 # Top-Level-Schlüssel im gespeicherten Dict.
 STORE_PERSONS: Final = "persons"
@@ -65,6 +65,7 @@ F_COUNT: Final = "count"  # Soll-Anzahl pro Periode
 # Execution (Ausführungs-Ereignis)
 F_TIMESTAMP: Final = "ts"  # ISO-8601 UTC
 F_NOTE: Final = "note"
+F_USER_ID: Final = "user_id"  # optional: HA-Benutzer, der per Karte geloggt hat
 
 # --------------------------------------------------------------------------- #
 # Perioden-Typen
@@ -125,16 +126,9 @@ SIGNAL_UPDATE: Final = f"{DOMAIN}_updated"
 # Event, das bei jeder neuen Ausführung auf dem HA-Event-Bus gefeuert wird
 EVENT_EXECUTION_LOGGED: Final = f"{DOMAIN}_execution_logged"
 
-# --------------------------------------------------------------------------- #
-# Statistik-Zeitfenster (Tage) für die Personen-Sensoren-Aufschlüsselung
-# --------------------------------------------------------------------------- #
-STAT_WINDOWS_DAYS: Final = {
-    "today": 0,  # Sonderfall: seit lokalem Kalendertag-Beginn
-    "7d": 7,
-    "30d": 30,
-    "90d": 90,
-    "all": None,  # gesamt
-}
+# Signal für den zeitgesteuerten Tick (stündlich + lokale Mitternacht): Sensoren
+# rechnen gleitende Fenster und Perioden neu, ohne dass sich Daten geändert haben.
+SIGNAL_TICK: Final = f"{DOMAIN}_tick"
 
 # --------------------------------------------------------------------------- #
 # Frontend / Lovelace-Karten
@@ -149,5 +143,4 @@ LOVELACE_CARDS: Final = (
 )
 FRONTEND_URL_BASE: Final = "/hausarbeit_frontend"
 
-# hass.data-Struktur:  hass.data[DOMAIN][entry_id] = HausarbeitCoordinator
-PLATFORMS: Final = ["sensor"]
+# Der Coordinator liegt in entry.runtime_data (siehe HausarbeitConfigEntry).

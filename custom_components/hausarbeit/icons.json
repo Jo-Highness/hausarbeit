@@ -1,0 +1,24 @@
+{
+  "entity": {
+    "sensor": {
+      "person": { "default": "mdi:account" },
+      "target_day": { "default": "mdi:target" },
+      "target_week": { "default": "mdi:target" },
+      "target_month": { "default": "mdi:target" },
+      "last_done": { "default": "mdi:calendar-check" }
+    }
+  },
+  "services": {
+    "log_execution": { "service": "mdi:check-circle-outline" },
+    "delete_execution": { "service": "mdi:delete-outline" },
+    "correct_execution": { "service": "mdi:pencil-outline" },
+    "add_task": { "service": "mdi:playlist-plus" },
+    "update_task": { "service": "mdi:playlist-edit" },
+    "remove_task": { "service": "mdi:playlist-remove" },
+    "add_person": { "service": "mdi:account-plus" },
+    "update_person": { "service": "mdi:account-edit" },
+    "remove_person": { "service": "mdi:account-remove" },
+    "set_target": { "service": "mdi:target" },
+    "remove_target": { "service": "mdi:target-variant" }
+  }
+}

@@ -9,3 +9,11 @@ updates:
       - "dependencies"
     commit-message:
       prefix: "ci"
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "deps"

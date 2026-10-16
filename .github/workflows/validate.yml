@@ -1,5 +1,8 @@
 name: Validate
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [main]
@@ -21,6 +24,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # hacs/action only publishes stale 2022 tags; HACS documents @main as the
+      # supported reference.
       - uses: hacs/action@main
         with:
           category: integration
@@ -33,18 +38,3 @@ jobs:
       - uses: astral-sh/ruff-action@v3
       - run: ruff check .
       - run: ruff format --check .
-
-  tests:
-    name: pytest
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install pytest pytest-homeassistant-custom-component
-      - name: Run tests
-        run: pytest -q

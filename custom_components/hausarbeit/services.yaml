@@ -1,100 +1,113 @@
+# Service definitions. Names/descriptions are translated via strings.json /
+# translations/*.json (section "services"); the English texts here are the base.
+
 log_execution:
-  name: Ausführung protokollieren
-  description: Meldet, dass eine Person eine Aufgabe erledigt hat (erzeugt ein Log-Ereignis).
+  name: Log a completed chore
+  description: "Records that a person completed a task. Returns the new execution_id."
   fields:
     person_id:
-      name: Person
-      description: ID der Person (siehe WebSocket hausarbeit/persons oder Options-Flow).
+      name: "Person"
+      description: "Person ID (per_…). Shown as the person_id attribute of the person sensor."
       required: true
       example: per_1a2b3c4d
       selector:
         text:
     task_id:
-      name: Aufgabe
-      description: ID der Aufgabe.
+      name: "Task"
+      description: "Task ID (tsk_…). Shown as the task_id attribute of the \"last done\" sensor."
       required: true
       example: tsk_1a2b3c4d
       selector:
         text:
     ts:
-      name: Zeitpunkt
-      description: Optionaler Zeitstempel (Standard jetzt) — z. B. zum Nachtragen.
+      name: "Time"
+      description: "Optional. Defaults to now; use it to log something afterwards. Without a time zone, Home Assistant's local time is used."
       required: false
       selector:
         datetime:
     note:
-      name: Notiz
-      description: Optionale Notiz zur Ausführung.
+      name: "Note"
+      description: "Optional note."
       required: false
       selector:
         text:
 
 delete_execution:
-  name: Ausführung löschen
-  description: Löscht eine protokollierte Ausführung anhand ihrer ID.
+  name: Delete a log entry
+  description: "Deletes a logged execution by its ID (admin only)."
   fields:
     execution_id:
-      name: Ausführungs-ID
-      description: ID der zu löschenden Ausführung.
+      name: "Execution ID"
+      description: "ID of the log entry (exe_…), e.g. from the response of log_execution or the hausarbeit_execution_logged event."
       required: true
       example: exe_1a2b3c4d
       selector:
         text:
 
 correct_execution:
-  name: Ausführung korrigieren
-  description: Korrigiert Person, Aufgabe, Zeitpunkt oder Notiz einer Ausführung.
+  name: Correct a log entry
+  description: "Changes person, task, time or note of a logged execution (admin only)."
   fields:
     execution_id:
-      name: Ausführungs-ID
+      name: "Execution ID"
+      description: "ID of the log entry (exe_…), e.g. from the response of log_execution or the hausarbeit_execution_logged event."
       required: true
+      example: exe_1a2b3c4d
       selector:
         text:
     person_id:
-      name: Person (neu)
+      name: "Person (new)"
+      description: "Person ID (per_…). Shown as the person_id attribute of the person sensor."
       required: false
+      example: per_1a2b3c4d
       selector:
         text:
     task_id:
-      name: Aufgabe (neu)
+      name: "Task (new)"
+      description: "Task ID (tsk_…). Shown as the task_id attribute of the \"last done\" sensor."
       required: false
+      example: tsk_1a2b3c4d
       selector:
         text:
     ts:
-      name: Zeitpunkt (neu)
+      name: "Time (new)"
+      description: "Optional. Defaults to now; use it to log something afterwards. Without a time zone, Home Assistant's local time is used."
       required: false
       selector:
         datetime:
     note:
-      name: Notiz (neu)
+      name: "Note (new)"
+      description: "Optional note."
       required: false
       selector:
         text:
 
 add_task:
-  name: Aufgabe anlegen
-  description: Legt eine neue Hausarbeit an.
+  name: Add task
+  description: "Creates a new chore and returns its ID (admin only)."
   fields:
     name:
-      name: Name
+      name: "Name"
+      description: "Display name."
       required: true
-      example: Spülmaschine ausräumen
       selector:
         text:
     icon:
-      name: Icon (mdi)
+      name: "Icon"
+      description: "Material Design icon, e.g. mdi:dishwasher."
       required: false
       example: mdi:dishwasher
       selector:
         icon:
     category:
-      name: Kategorie
+      name: "Category"
+      description: "Optional free-text group."
       required: false
       selector:
         text:
     points:
-      name: Punkte/Gewicht
-      description: Gewicht der Aufgabe für Statistiken (Standard 1).
+      name: "Points"
+      description: "Weight of the task for points statistics (0–100, default 1)."
       required: false
       selector:
         number:
@@ -103,37 +116,45 @@ add_task:
           step: 0.5
           mode: box
     active:
-      name: Aktiv
+      name: "Active"
+      description: "Inactive tasks are hidden on the claim card."
       required: false
       selector:
         boolean:
 
 update_task:
-  name: Aufgabe ändern
-  description: Ändert Eigenschaften einer bestehenden Aufgabe.
+  name: Update task
+  description: "Changes an existing chore; omitted fields stay unchanged (admin only)."
   fields:
     task_id:
-      name: Aufgabe
+      name: "Task"
+      description: "Task ID (tsk_…). Shown as the task_id attribute of the \"last done\" sensor."
       required: true
+      example: tsk_1a2b3c4d
       selector:
         text:
     name:
-      name: Name
+      name: "Name"
+      description: "Display name."
       required: false
       selector:
         text:
     icon:
-      name: Icon (mdi)
+      name: "Icon"
+      description: "Material Design icon, e.g. mdi:dishwasher."
       required: false
+      example: mdi:dishwasher
       selector:
         icon:
     category:
-      name: Kategorie
+      name: "Category"
+      description: "Optional free-text group."
       required: false
       selector:
         text:
     points:
-      name: Punkte/Gewicht
+      name: "Points"
+      description: "Weight of the task for points statistics (0–100, default 1)."
       required: false
       selector:
         number:
@@ -142,119 +163,139 @@ update_task:
           step: 0.5
           mode: box
     active:
-      name: Aktiv
+      name: "Active"
+      description: "Inactive tasks are hidden on the claim card."
       required: false
       selector:
         boolean:
 
 remove_task:
-  name: Aufgabe entfernen
-  description: Löscht eine Aufgabe (zugehörige Soll-Vorgaben werden entfernt, das Log bleibt).
+  name: Remove task
+  description: "Deletes a chore and its targets. The log is kept (admin only)."
   fields:
     task_id:
-      name: Aufgabe
+      name: "Task"
+      description: "Task ID (tsk_…). Shown as the task_id attribute of the \"last done\" sensor."
       required: true
+      example: tsk_1a2b3c4d
       selector:
         text:
 
 add_person:
-  name: Person anlegen
-  description: Legt eine neue Person an.
+  name: Add person
+  description: "Creates a new person and returns their ID (admin only)."
   fields:
     name:
-      name: Name
+      name: "Name"
+      description: "Display name."
       required: true
-      example: Anna
       selector:
         text:
     icon:
-      name: Icon (mdi)
+      name: "Icon"
+      description: "Material Design icon, e.g. mdi:dishwasher."
       required: false
+      example: mdi:dishwasher
       selector:
         icon:
     color:
-      name: Farbe
+      name: "Color"
+      description: "Optional CSS color, e.g. #3f51b5. Empty string removes it."
       required: false
       example: "#3f51b5"
       selector:
         text:
     ha_person_entity:
-      name: HA-Personen-Entität
-      description: Optionale Verknüpfung zu einer bestehenden person.*-Entität.
+      name: "Home Assistant person"
+      description: "Optional link to a person entity."
       required: false
       selector:
         entity:
           domain: person
 
 update_person:
-  name: Person ändern
+  name: Update person
+  description: "Changes an existing person; omitted fields stay unchanged (admin only)."
   fields:
     person_id:
-      name: Person
+      name: "Person"
+      description: "Person ID (per_…). Shown as the person_id attribute of the person sensor."
       required: true
+      example: per_1a2b3c4d
       selector:
         text:
     name:
-      name: Name
+      name: "Name"
+      description: "Display name."
       required: false
       selector:
         text:
     icon:
-      name: Icon (mdi)
+      name: "Icon"
+      description: "Material Design icon, e.g. mdi:dishwasher."
       required: false
+      example: mdi:dishwasher
       selector:
         icon:
     color:
-      name: Farbe
+      name: "Color"
+      description: "Optional CSS color, e.g. #3f51b5. Empty string removes it."
       required: false
+      example: "#3f51b5"
       selector:
         text:
     ha_person_entity:
-      name: HA-Personen-Entität
+      name: "Home Assistant person"
+      description: "Optional link to a person entity."
       required: false
       selector:
         entity:
           domain: person
 
 remove_person:
-  name: Person entfernen
-  description: Löscht eine Person (zugehörige Soll-Vorgaben werden entfernt, das Log bleibt).
+  name: Remove person
+  description: "Deletes a person and their targets. The log is kept (admin only)."
   fields:
     person_id:
-      name: Person
+      name: "Person"
+      description: "Person ID (per_…). Shown as the person_id attribute of the person sensor."
       required: true
+      example: per_1a2b3c4d
       selector:
         text:
 
 set_target:
-  name: Soll-Vorgabe setzen
-  description: Legt fest/ändert, wie oft eine Person eine Aufgabe pro Periode erledigen soll.
+  name: Set target
+  description: "Creates or updates how often a person should do a task per period. Returns the target_id (admin only)."
   fields:
     person_id:
-      name: Person
+      name: "Person"
+      description: "Person ID (per_…). Shown as the person_id attribute of the person sensor."
       required: true
+      example: per_1a2b3c4d
       selector:
         text:
     task_id:
-      name: Aufgabe
+      name: "Task"
+      description: "Task ID (tsk_…). Shown as the task_id attribute of the \"last done\" sensor."
       required: true
+      example: tsk_1a2b3c4d
       selector:
         text:
     period:
-      name: Periode
+      name: "Period"
+      description: "day, week or month."
       required: true
       selector:
         select:
+          translation_key: period
           options:
-            - value: day
-              label: Tag
-            - value: week
-              label: Woche
-            - value: month
-              label: Monat
+            - day
+            - week
+            - month
     count:
-      name: Soll-Anzahl
-      description: Wie oft pro Periode.
+      name: "Target count"
+      description: "How often per period (≥ 1)."
       required: true
       selector:
         number:
@@ -263,10 +304,13 @@ set_target:
           mode: box
 
 remove_target:
-  name: Soll-Vorgabe entfernen
+  name: Remove target
+  description: "Deletes a target (admin only)."
   fields:
     target_id:
-      name: Soll-Vorgabe-ID
+      name: "Target ID"
+      description: "Target ID (tgt_…). Shown as the target_id attribute of the target sensor."
       required: true
+      example: tgt_1a2b3c4d
       selector:
         text:

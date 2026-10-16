@@ -3,11 +3,20 @@
 Lese-Kommandos (persons/tasks/targets/log/stats) und bequeme Aktions-Kommandos
 (log_execution/delete_execution), plus ein subscribe-Kommando, das bei jeder
 Datenänderung ein {event:"updated"} pusht.
+
+Berechtigungen: Lesen und Loggen darf jede*r angemeldete Benutzer*in (Familien-
+Dashboard). ``delete_execution`` (Rückgängig in der Claim-Karte) dürfen Admins für
+jeden Eintrag, alle anderen nur für Einträge, die sie selbst per Karte geloggt haben.
+Stammdaten (Personen/Aufgaben/Vorgaben) lassen sich per WebSocket nicht ändern —
+dafür gibt es die Admin-Services und den Options-Flow.
 """
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 from homeassistant.components import websocket_api
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import voluptuous as vol
@@ -20,6 +29,7 @@ from .const import (
     F_PERSON_ID,
     F_TASK_ID,
     F_TIMESTAMP,
+    F_USER_ID,
     WS_DELETE_EXECUTION,
     WS_LOG,
     WS_LOG_EXECUTION,
@@ -30,14 +40,18 @@ from .const import (
     WS_TASKS,
 )
 from .coordinator import HausarbeitCoordinator, HausarbeitError
+from .targets import parse_ts
 
 _REGISTERED = f"{DOMAIN}_ws_registered"
 
 
+_MIN_DT = datetime.min.replace(tzinfo=UTC)
+
+
 def _coordinator(hass: HomeAssistant) -> HausarbeitCoordinator | None:
-    for value in hass.data.get(DOMAIN, {}).values():
-        if isinstance(value, HausarbeitCoordinator):
-            return value
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.state is ConfigEntryState.LOADED:
+            return entry.runtime_data
     return None
 
 
@@ -59,7 +73,7 @@ def async_register(hass: HomeAssistant) -> None:
 def _require(hass, connection, msg) -> HausarbeitCoordinator | None:
     coord = _coordinator(hass)
     if coord is None:
-        connection.send_error(msg["id"], "not_ready", "Hausarbeit-Tracker ist nicht eingerichtet.")
+        connection.send_error(msg["id"], "not_ready", "Hausarbeit-Tracker is not set up.")
         return None
     return coord
 
@@ -117,7 +131,9 @@ def ws_log(hass, connection, msg) -> None:
             }
         )
     total = len(items)
-    items.sort(key=lambda e: e.get(F_TIMESTAMP, ""), reverse=True)
+    # Nach echtem Zeitpunkt sortieren (nicht nach String — Offsets wie +02:00 und
+    # Z/+00:00 würden sonst falsch einsortiert). Unlesbare Werte ans Ende.
+    items.sort(key=lambda e: parse_ts(e.get(F_TIMESTAMP, "")) or _MIN_DT, reverse=True)
     connection.send_result(msg["id"], {"executions": items[: msg["limit"]], "total": total})
 
 
@@ -154,6 +170,7 @@ def ws_log_execution(hass, connection, msg) -> None:
             msg[F_TASK_ID],
             ts=msg.get(F_TIMESTAMP),
             note=msg.get(F_NOTE),
+            user_id=connection.user.id if connection.user else None,
         )
     except HausarbeitError as err:
         connection.send_error(msg["id"], "invalid_input", str(err))
@@ -172,8 +189,19 @@ def ws_delete_execution(hass, connection, msg) -> None:
     coord = _require(hass, connection, msg)
     if not coord:
         return
+    execution_id = msg[ATTR_EXECUTION_ID]
+    user = connection.user
+    if user is not None and not user.is_admin:
+        execution = coord.store.get_execution(execution_id)
+        if execution is not None and execution.get(F_USER_ID) != user.id:
+            connection.send_error(
+                msg["id"],
+                websocket_api.ERR_UNAUTHORIZED,
+                "Only admins can delete executions logged by someone else.",
+            )
+            return
     try:
-        coord.delete_execution(msg[ATTR_EXECUTION_ID])
+        coord.delete_execution(execution_id)
     except HausarbeitError as err:
         connection.send_error(msg["id"], "not_found", str(err))
         return
