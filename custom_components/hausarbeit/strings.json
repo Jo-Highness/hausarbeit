@@ -1,0 +1,480 @@
+{
+  "title": "Hausarbeit-Tracker",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Hausarbeit-Tracker",
+        "description": "Creates the household. Manage people, tasks and targets afterwards via the options.",
+        "data": {
+          "title": "Household name"
+        },
+        "data_description": {
+          "title": "Shown as the device name, e.g. \"Home\"."
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Hausarbeit-Tracker is already set up (one entry per household)."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Manage Hausarbeit-Tracker",
+        "menu_options": {
+          "settings": "Settings",
+          "persons": "People",
+          "tasks": "Tasks",
+          "targets": "Targets"
+        }
+      },
+      "settings": {
+        "title": "Settings",
+        "data": {
+          "week_start": "Week start",
+          "stats_days": "Statistics period (days)"
+        },
+        "data_description": {
+          "week_start": "First day of a week for weekly targets.",
+          "stats_days": "Time window of the person sensors and the stats card (1–3650 days)."
+        }
+      },
+      "persons": {
+        "title": "People",
+        "menu_options": {
+          "person_add": "Add person",
+          "person_edit": "Edit person",
+          "person_remove": "Remove person"
+        }
+      },
+      "person_add": {
+        "title": "Add person",
+        "data": {
+          "name": "Name",
+          "icon": "Icon (mdi)",
+          "color": "Color (optional)",
+          "ha_person_entity": "HA person entity (optional)"
+        },
+        "data_description": {
+          "name": "Shown on the cards and used for the sensor name.",
+          "icon": "Material Design icon, e.g. mdi:account.",
+          "color": "Optional CSS color for the claim card, e.g. #3f51b5 or teal. Leave empty for the theme color.",
+          "ha_person_entity": "Optional link to a Home Assistant person."
+        }
+      },
+      "person_edit": {
+        "title": "Select person",
+        "data": {
+          "person": "Person"
+        }
+      },
+      "person_edit_form": {
+        "title": "Edit person",
+        "data": {
+          "name": "Name",
+          "icon": "Icon (mdi)",
+          "color": "Color (optional)",
+          "ha_person_entity": "HA person entity (optional)"
+        },
+        "data_description": {
+          "name": "Shown on the cards and used for the sensor name.",
+          "icon": "Material Design icon, e.g. mdi:account.",
+          "color": "Optional CSS color for the claim card, e.g. #3f51b5 or teal. Leave empty for the theme color.",
+          "ha_person_entity": "Optional link to a Home Assistant person."
+        }
+      },
+      "person_remove": {
+        "title": "Remove person",
+        "description": "Related targets are removed. The execution log is kept.",
+        "data": {
+          "person": "Person"
+        }
+      },
+      "tasks": {
+        "title": "Tasks",
+        "menu_options": {
+          "task_add": "Add task",
+          "task_edit": "Edit task",
+          "task_remove": "Remove task"
+        }
+      },
+      "task_add": {
+        "title": "Add task",
+        "data": {
+          "name": "Name",
+          "icon": "Icon (mdi)",
+          "category": "Category (optional)",
+          "points": "Points/weight",
+          "active": "Active"
+        },
+        "data_description": {
+          "name": "Name of the chore, e.g. \"Empty the dishwasher\".",
+          "icon": "Material Design icon, e.g. mdi:dishwasher.",
+          "category": "Optional free-text group, e.g. Kitchen.",
+          "points": "Weight of the task for points statistics (0–100, default 1).",
+          "active": "Inactive tasks are hidden on the claim card but keep their history."
+        }
+      },
+      "task_edit": {
+        "title": "Select task",
+        "data": {
+          "task": "Task"
+        }
+      },
+      "task_edit_form": {
+        "title": "Edit task",
+        "data": {
+          "name": "Name",
+          "icon": "Icon (mdi)",
+          "category": "Category (optional)",
+          "points": "Points/weight",
+          "active": "Active"
+        },
+        "data_description": {
+          "name": "Name of the chore, e.g. \"Empty the dishwasher\".",
+          "icon": "Material Design icon, e.g. mdi:dishwasher.",
+          "category": "Optional free-text group, e.g. Kitchen.",
+          "points": "Weight of the task for points statistics (0–100, default 1).",
+          "active": "Inactive tasks are hidden on the claim card but keep their history."
+        }
+      },
+      "task_remove": {
+        "title": "Remove task",
+        "description": "Related targets are removed. The execution log is kept.",
+        "data": {
+          "task": "Task"
+        }
+      },
+      "targets": {
+        "title": "Targets",
+        "menu_options": {
+          "target_add": "Add/update target",
+          "target_remove": "Remove target"
+        }
+      },
+      "target_add": {
+        "title": "Add or update target",
+        "description": "The same person + task + period overwrites the existing target count.",
+        "data": {
+          "person_id": "Person",
+          "task_id": "Task",
+          "period": "Period",
+          "count": "Target count per period"
+        },
+        "data_description": {
+          "person_id": "Who should do it.",
+          "task_id": "Which chore.",
+          "period": "Day, week (see week start) or calendar month.",
+          "count": "How often per period."
+        }
+      },
+      "target_remove": {
+        "title": "Remove target",
+        "data": {
+          "target": "Target"
+        }
+      }
+    },
+    "error": {
+      "invalid": "Invalid input. Please check.",
+      "invalid_color": "Invalid color. Use e.g. #3f51b5, teal or rgb(63, 81, 181)."
+    },
+    "abort": {
+      "need_person_and_task": "Please create at least one person and one task first."
+    }
+  },
+  "selector": {
+    "week_start": {
+      "options": {
+        "0": "Monday",
+        "1": "Tuesday",
+        "2": "Wednesday",
+        "3": "Thursday",
+        "4": "Friday",
+        "5": "Saturday",
+        "6": "Sunday"
+      }
+    },
+    "period": {
+      "options": {
+        "day": "Day",
+        "week": "Week",
+        "month": "Month"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "person": {
+        "name": "{person}",
+        "unit_of_measurement": "tasks"
+      },
+      "target_day": {
+        "name": "{person} · {task} (day)",
+        "unit_of_measurement": "tasks"
+      },
+      "target_week": {
+        "name": "{person} · {task} (week)",
+        "unit_of_measurement": "tasks"
+      },
+      "target_month": {
+        "name": "{person} · {task} (month)",
+        "unit_of_measurement": "tasks"
+      },
+      "last_done": {
+        "name": "{task} last done"
+      }
+    }
+  },
+  "exceptions": {
+    "not_loaded": {
+      "message": "Hausarbeit-Tracker is not set up or not loaded."
+    },
+    "person_not_found": {
+      "message": "Person {id} not found."
+    },
+    "task_not_found": {
+      "message": "Task {id} not found."
+    },
+    "target_not_found": {
+      "message": "Target {id} not found."
+    },
+    "execution_not_found": {
+      "message": "Execution {id} not found."
+    },
+    "empty_person_name": {
+      "message": "The person's name must not be empty."
+    },
+    "empty_task_name": {
+      "message": "The task's name must not be empty."
+    },
+    "invalid_points": {
+      "message": "Points must be a number between {min} and {max}."
+    },
+    "invalid_period": {
+      "message": "Invalid period: {period}."
+    },
+    "invalid_count": {
+      "message": "The target count must be a whole number greater than 0."
+    },
+    "invalid_timestamp": {
+      "message": "Invalid timestamp: {ts}."
+    }
+  },
+  "services": {
+    "log_execution": {
+      "name": "Log a completed chore",
+      "description": "Records that a person completed a task. Returns the new execution_id.",
+      "fields": {
+        "person_id": {
+          "name": "Person",
+          "description": "Person ID (per_…). Shown as the person_id attribute of the person sensor."
+        },
+        "task_id": {
+          "name": "Task",
+          "description": "Task ID (tsk_…). Shown as the task_id attribute of the \"last done\" sensor."
+        },
+        "ts": {
+          "name": "Time",
+          "description": "Optional. Defaults to now; use it to log something afterwards. Without a time zone, Home Assistant's local time is used."
+        },
+        "note": {
+          "name": "Note",
+          "description": "Optional note."
+        }
+      }
+    },
+    "delete_execution": {
+      "name": "Delete a log entry",
+      "description": "Deletes a logged execution by its ID (admin only).",
+      "fields": {
+        "execution_id": {
+          "name": "Execution ID",
+          "description": "ID of the log entry (exe_…), e.g. from the response of log_execution or the hausarbeit_execution_logged event."
+        }
+      }
+    },
+    "correct_execution": {
+      "name": "Correct a log entry",
+      "description": "Changes person, task, time or note of a logged execution (admin only).",
+      "fields": {
+        "execution_id": {
+          "name": "Execution ID",
+          "description": "ID of the log entry (exe_…), e.g. from the response of log_execution or the hausarbeit_execution_logged event."
+        },
+        "person_id": {
+          "name": "Person (new)",
+          "description": "Person ID (per_…). Shown as the person_id attribute of the person sensor."
+        },
+        "task_id": {
+          "name": "Task (new)",
+          "description": "Task ID (tsk_…). Shown as the task_id attribute of the \"last done\" sensor."
+        },
+        "ts": {
+          "name": "Time (new)",
+          "description": "Optional. Defaults to now; use it to log something afterwards. Without a time zone, Home Assistant's local time is used."
+        },
+        "note": {
+          "name": "Note (new)",
+          "description": "Optional note."
+        }
+      }
+    },
+    "add_task": {
+      "name": "Add task",
+      "description": "Creates a new chore and returns its ID (admin only).",
+      "fields": {
+        "name": {
+          "name": "Name",
+          "description": "Display name."
+        },
+        "icon": {
+          "name": "Icon",
+          "description": "Material Design icon, e.g. mdi:dishwasher."
+        },
+        "category": {
+          "name": "Category",
+          "description": "Optional free-text group."
+        },
+        "points": {
+          "name": "Points",
+          "description": "Weight of the task for points statistics (0–100, default 1)."
+        },
+        "active": {
+          "name": "Active",
+          "description": "Inactive tasks are hidden on the claim card."
+        }
+      }
+    },
+    "update_task": {
+      "name": "Update task",
+      "description": "Changes an existing chore; omitted fields stay unchanged (admin only).",
+      "fields": {
+        "task_id": {
+          "name": "Task",
+          "description": "Task ID (tsk_…). Shown as the task_id attribute of the \"last done\" sensor."
+        },
+        "name": {
+          "name": "Name",
+          "description": "Display name."
+        },
+        "icon": {
+          "name": "Icon",
+          "description": "Material Design icon, e.g. mdi:dishwasher."
+        },
+        "category": {
+          "name": "Category",
+          "description": "Optional free-text group."
+        },
+        "points": {
+          "name": "Points",
+          "description": "Weight of the task for points statistics (0–100, default 1)."
+        },
+        "active": {
+          "name": "Active",
+          "description": "Inactive tasks are hidden on the claim card."
+        }
+      }
+    },
+    "remove_task": {
+      "name": "Remove task",
+      "description": "Deletes a chore and its targets. The log is kept (admin only).",
+      "fields": {
+        "task_id": {
+          "name": "Task",
+          "description": "Task ID (tsk_…). Shown as the task_id attribute of the \"last done\" sensor."
+        }
+      }
+    },
+    "add_person": {
+      "name": "Add person",
+      "description": "Creates a new person and returns their ID (admin only).",
+      "fields": {
+        "name": {
+          "name": "Name",
+          "description": "Display name."
+        },
+        "icon": {
+          "name": "Icon",
+          "description": "Material Design icon, e.g. mdi:dishwasher."
+        },
+        "color": {
+          "name": "Color",
+          "description": "Optional CSS color, e.g. #3f51b5. Empty string removes it."
+        },
+        "ha_person_entity": {
+          "name": "Home Assistant person",
+          "description": "Optional link to a person entity."
+        }
+      }
+    },
+    "update_person": {
+      "name": "Update person",
+      "description": "Changes an existing person; omitted fields stay unchanged (admin only).",
+      "fields": {
+        "person_id": {
+          "name": "Person",
+          "description": "Person ID (per_…). Shown as the person_id attribute of the person sensor."
+        },
+        "name": {
+          "name": "Name",
+          "description": "Display name."
+        },
+        "icon": {
+          "name": "Icon",
+          "description": "Material Design icon, e.g. mdi:dishwasher."
+        },
+        "color": {
+          "name": "Color",
+          "description": "Optional CSS color, e.g. #3f51b5. Empty string removes it."
+        },
+        "ha_person_entity": {
+          "name": "Home Assistant person",
+          "description": "Optional link to a person entity."
+        }
+      }
+    },
+    "remove_person": {
+      "name": "Remove person",
+      "description": "Deletes a person and their targets. The log is kept (admin only).",
+      "fields": {
+        "person_id": {
+          "name": "Person",
+          "description": "Person ID (per_…). Shown as the person_id attribute of the person sensor."
+        }
+      }
+    },
+    "set_target": {
+      "name": "Set target",
+      "description": "Creates or updates how often a person should do a task per period. Returns the target_id (admin only).",
+      "fields": {
+        "person_id": {
+          "name": "Person",
+          "description": "Person ID (per_…). Shown as the person_id attribute of the person sensor."
+        },
+        "task_id": {
+          "name": "Task",
+          "description": "Task ID (tsk_…). Shown as the task_id attribute of the \"last done\" sensor."
+        },
+        "period": {
+          "name": "Period",
+          "description": "day, week or month."
+        },
+        "count": {
+          "name": "Target count",
+          "description": "How often per period (≥ 1)."
+        }
+      }
+    },
+    "remove_target": {
+      "name": "Remove target",
+      "description": "Deletes a target (admin only).",
+      "fields": {
+        "target_id": {
+          "name": "Target ID",
+          "description": "Target ID (tgt_…). Shown as the target_id attribute of the target sensor."
+        }
+      }
+    }
+  }
+}

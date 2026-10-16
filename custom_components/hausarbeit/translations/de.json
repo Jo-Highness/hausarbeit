@@ -7,6 +7,9 @@
         "description": "Legt den Haushalt an. Personen, Aufgaben und Soll-Vorgaben verwaltest du danach über die Optionen.",
         "data": {
           "title": "Name des Haushalts"
+        },
+        "data_description": {
+          "title": "Wird als Gerätename angezeigt, z. B. „Zuhause“."
         }
       }
     },
@@ -30,6 +33,10 @@
         "data": {
           "week_start": "Wochenstart",
           "stats_days": "Statistik-Zeitraum (Tage)"
+        },
+        "data_description": {
+          "week_start": "Erster Tag einer Woche für Wochen-Vorgaben.",
+          "stats_days": "Zeitraum der Personen-Sensoren und der Statistik-Karte (1–3650 Tage)."
         }
       },
       "persons": {
@@ -47,11 +54,19 @@
           "icon": "Icon (mdi)",
           "color": "Farbe (optional)",
           "ha_person_entity": "HA-Personen-Entität (optional)"
+        },
+        "data_description": {
+          "name": "Erscheint auf den Karten und im Sensornamen.",
+          "icon": "Material-Design-Icon, z. B. mdi:account.",
+          "color": "Optionale CSS-Farbe für die Claim-Karte, z. B. #3f51b5 oder teal. Leer = Theme-Farbe.",
+          "ha_person_entity": "Optionale Verknüpfung mit einer Home-Assistant-Person."
         }
       },
       "person_edit": {
         "title": "Person auswählen",
-        "data": { "person": "Person" }
+        "data": {
+          "person": "Person"
+        }
       },
       "person_edit_form": {
         "title": "Person bearbeiten",
@@ -60,12 +75,20 @@
           "icon": "Icon (mdi)",
           "color": "Farbe (optional)",
           "ha_person_entity": "HA-Personen-Entität (optional)"
+        },
+        "data_description": {
+          "name": "Erscheint auf den Karten und im Sensornamen.",
+          "icon": "Material-Design-Icon, z. B. mdi:account.",
+          "color": "Optionale CSS-Farbe für die Claim-Karte, z. B. #3f51b5 oder teal. Leer = Theme-Farbe.",
+          "ha_person_entity": "Optionale Verknüpfung mit einer Home-Assistant-Person."
         }
       },
       "person_remove": {
         "title": "Person entfernen",
         "description": "Die zugehörigen Soll-Vorgaben werden entfernt. Das Ausführungs-Log bleibt erhalten.",
-        "data": { "person": "Person" }
+        "data": {
+          "person": "Person"
+        }
       },
       "tasks": {
         "title": "Aufgaben",
@@ -83,11 +106,20 @@
           "category": "Kategorie (optional)",
           "points": "Punkte/Gewicht",
           "active": "Aktiv"
+        },
+        "data_description": {
+          "name": "Name der Hausarbeit, z. B. „Spülmaschine ausräumen“.",
+          "icon": "Material-Design-Icon, z. B. mdi:dishwasher.",
+          "category": "Optionale Gruppe als Freitext, z. B. Küche.",
+          "points": "Gewicht der Aufgabe für die Punkte-Statistik (0–100, Standard 1).",
+          "active": "Inaktive Aufgaben werden in der Claim-Karte ausgeblendet, ihr Verlauf bleibt."
         }
       },
       "task_edit": {
         "title": "Aufgabe auswählen",
-        "data": { "task": "Aufgabe" }
+        "data": {
+          "task": "Aufgabe"
+        }
       },
       "task_edit_form": {
         "title": "Aufgabe bearbeiten",
@@ -97,12 +129,21 @@
           "category": "Kategorie (optional)",
           "points": "Punkte/Gewicht",
           "active": "Aktiv"
+        },
+        "data_description": {
+          "name": "Name der Hausarbeit, z. B. „Spülmaschine ausräumen“.",
+          "icon": "Material-Design-Icon, z. B. mdi:dishwasher.",
+          "category": "Optionale Gruppe als Freitext, z. B. Küche.",
+          "points": "Gewicht der Aufgabe für die Punkte-Statistik (0–100, Standard 1).",
+          "active": "Inaktive Aufgaben werden in der Claim-Karte ausgeblendet, ihr Verlauf bleibt."
         }
       },
       "task_remove": {
         "title": "Aufgabe entfernen",
         "description": "Die zugehörigen Soll-Vorgaben werden entfernt. Das Ausführungs-Log bleibt erhalten.",
-        "data": { "task": "Aufgabe" }
+        "data": {
+          "task": "Aufgabe"
+        }
       },
       "targets": {
         "title": "Soll-Vorgaben",
@@ -119,15 +160,24 @@
           "task_id": "Aufgabe",
           "period": "Periode",
           "count": "Soll-Anzahl pro Periode"
+        },
+        "data_description": {
+          "person_id": "Wer soll es erledigen.",
+          "task_id": "Welche Hausarbeit.",
+          "period": "Tag, Woche (siehe Wochenstart) oder Kalendermonat.",
+          "count": "Wie oft pro Periode."
         }
       },
       "target_remove": {
         "title": "Soll-Vorgabe entfernen",
-        "data": { "target": "Soll-Vorgabe" }
+        "data": {
+          "target": "Soll-Vorgabe"
+        }
       }
     },
     "error": {
-      "invalid": "Eingabe ungültig. Bitte prüfen."
+      "invalid": "Eingabe ungültig. Bitte prüfen.",
+      "invalid_color": "Ungültige Farbe. Beispiele: #3f51b5, teal oder rgb(63, 81, 181)."
     },
     "abort": {
       "need_person_and_task": "Bitte lege zuerst mindestens eine Person und eine Aufgabe an."
@@ -136,8 +186,294 @@
   "selector": {
     "week_start": {
       "options": {
-        "0": "Montag", "1": "Dienstag", "2": "Mittwoch", "3": "Donnerstag",
-        "4": "Freitag", "5": "Samstag", "6": "Sonntag"
+        "0": "Montag",
+        "1": "Dienstag",
+        "2": "Mittwoch",
+        "3": "Donnerstag",
+        "4": "Freitag",
+        "5": "Samstag",
+        "6": "Sonntag"
+      }
+    },
+    "period": {
+      "options": {
+        "day": "Tag",
+        "week": "Woche",
+        "month": "Monat"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "person": {
+        "name": "{person}",
+        "unit_of_measurement": "Aufgaben"
+      },
+      "target_day": {
+        "name": "{person} · {task} (Tag)",
+        "unit_of_measurement": "Aufgaben"
+      },
+      "target_week": {
+        "name": "{person} · {task} (Woche)",
+        "unit_of_measurement": "Aufgaben"
+      },
+      "target_month": {
+        "name": "{person} · {task} (Monat)",
+        "unit_of_measurement": "Aufgaben"
+      },
+      "last_done": {
+        "name": "{task} zuletzt erledigt"
+      }
+    }
+  },
+  "exceptions": {
+    "not_loaded": {
+      "message": "Der Hausarbeit-Tracker ist nicht eingerichtet oder nicht geladen."
+    },
+    "person_not_found": {
+      "message": "Person {id} nicht gefunden."
+    },
+    "task_not_found": {
+      "message": "Aufgabe {id} nicht gefunden."
+    },
+    "target_not_found": {
+      "message": "Soll-Vorgabe {id} nicht gefunden."
+    },
+    "execution_not_found": {
+      "message": "Ausführung {id} nicht gefunden."
+    },
+    "empty_person_name": {
+      "message": "Der Name der Person darf nicht leer sein."
+    },
+    "empty_task_name": {
+      "message": "Der Name der Aufgabe darf nicht leer sein."
+    },
+    "invalid_points": {
+      "message": "Punkte müssen eine Zahl zwischen {min} und {max} sein."
+    },
+    "invalid_period": {
+      "message": "Ungültige Periode: {period}."
+    },
+    "invalid_count": {
+      "message": "Die Soll-Anzahl muss eine ganze Zahl größer als 0 sein."
+    },
+    "invalid_timestamp": {
+      "message": "Ungültiger Zeitstempel: {ts}."
+    }
+  },
+  "services": {
+    "log_execution": {
+      "name": "Erledigung protokollieren",
+      "description": "Meldet, dass eine Person eine Aufgabe erledigt hat. Liefert die neue execution_id zurück.",
+      "fields": {
+        "person_id": {
+          "name": "Person",
+          "description": "ID der Person (per_…). Steht im Attribut person_id des Personen-Sensors."
+        },
+        "task_id": {
+          "name": "Aufgabe",
+          "description": "ID der Aufgabe (tsk_…). Steht im Attribut task_id des „zuletzt erledigt“-Sensors."
+        },
+        "ts": {
+          "name": "Zeitpunkt",
+          "description": "Optional, Standard jetzt – zum Nachtragen. Ohne Zeitzone gilt die lokale Home-Assistant-Zeit."
+        },
+        "note": {
+          "name": "Notiz",
+          "description": "Optionale Notiz."
+        }
+      }
+    },
+    "delete_execution": {
+      "name": "Log-Eintrag löschen",
+      "description": "Löscht eine protokollierte Ausführung anhand ihrer ID (nur Admins).",
+      "fields": {
+        "execution_id": {
+          "name": "Ausführungs-ID",
+          "description": "ID des Log-Eintrags (exe_…), z. B. aus der Antwort von log_execution oder dem Ereignis hausarbeit_execution_logged."
+        }
+      }
+    },
+    "correct_execution": {
+      "name": "Log-Eintrag korrigieren",
+      "description": "Ändert Person, Aufgabe, Zeitpunkt oder Notiz einer Ausführung (nur Admins).",
+      "fields": {
+        "execution_id": {
+          "name": "Ausführungs-ID",
+          "description": "ID des Log-Eintrags (exe_…), z. B. aus der Antwort von log_execution oder dem Ereignis hausarbeit_execution_logged."
+        },
+        "person_id": {
+          "name": "Person (neu)",
+          "description": "ID der Person (per_…). Steht im Attribut person_id des Personen-Sensors."
+        },
+        "task_id": {
+          "name": "Aufgabe (neu)",
+          "description": "ID der Aufgabe (tsk_…). Steht im Attribut task_id des „zuletzt erledigt“-Sensors."
+        },
+        "ts": {
+          "name": "Zeitpunkt (neu)",
+          "description": "Optional, Standard jetzt – zum Nachtragen. Ohne Zeitzone gilt die lokale Home-Assistant-Zeit."
+        },
+        "note": {
+          "name": "Notiz (neu)",
+          "description": "Optionale Notiz."
+        }
+      }
+    },
+    "add_task": {
+      "name": "Aufgabe anlegen",
+      "description": "Legt eine neue Hausarbeit an und liefert ihre ID zurück (nur Admins).",
+      "fields": {
+        "name": {
+          "name": "Name",
+          "description": "Anzeigename."
+        },
+        "icon": {
+          "name": "Icon",
+          "description": "Material-Design-Icon, z. B. mdi:dishwasher."
+        },
+        "category": {
+          "name": "Kategorie",
+          "description": "Optionale Gruppe als Freitext."
+        },
+        "points": {
+          "name": "Punkte",
+          "description": "Gewicht der Aufgabe für die Punkte-Statistik (0–100, Standard 1)."
+        },
+        "active": {
+          "name": "Aktiv",
+          "description": "Inaktive Aufgaben werden in der Claim-Karte ausgeblendet."
+        }
+      }
+    },
+    "update_task": {
+      "name": "Aufgabe ändern",
+      "description": "Ändert eine Hausarbeit; nicht angegebene Felder bleiben unverändert (nur Admins).",
+      "fields": {
+        "task_id": {
+          "name": "Aufgabe",
+          "description": "ID der Aufgabe (tsk_…). Steht im Attribut task_id des „zuletzt erledigt“-Sensors."
+        },
+        "name": {
+          "name": "Name",
+          "description": "Anzeigename."
+        },
+        "icon": {
+          "name": "Icon",
+          "description": "Material-Design-Icon, z. B. mdi:dishwasher."
+        },
+        "category": {
+          "name": "Kategorie",
+          "description": "Optionale Gruppe als Freitext."
+        },
+        "points": {
+          "name": "Punkte",
+          "description": "Gewicht der Aufgabe für die Punkte-Statistik (0–100, Standard 1)."
+        },
+        "active": {
+          "name": "Aktiv",
+          "description": "Inaktive Aufgaben werden in der Claim-Karte ausgeblendet."
+        }
+      }
+    },
+    "remove_task": {
+      "name": "Aufgabe entfernen",
+      "description": "Löscht eine Hausarbeit samt Soll-Vorgaben. Das Log bleibt erhalten (nur Admins).",
+      "fields": {
+        "task_id": {
+          "name": "Aufgabe",
+          "description": "ID der Aufgabe (tsk_…). Steht im Attribut task_id des „zuletzt erledigt“-Sensors."
+        }
+      }
+    },
+    "add_person": {
+      "name": "Person anlegen",
+      "description": "Legt eine neue Person an und liefert ihre ID zurück (nur Admins).",
+      "fields": {
+        "name": {
+          "name": "Name",
+          "description": "Anzeigename."
+        },
+        "icon": {
+          "name": "Icon",
+          "description": "Material-Design-Icon, z. B. mdi:dishwasher."
+        },
+        "color": {
+          "name": "Farbe",
+          "description": "Optionale CSS-Farbe, z. B. #3f51b5. Leerer Text entfernt sie."
+        },
+        "ha_person_entity": {
+          "name": "Home-Assistant-Person",
+          "description": "Optionale Verknüpfung mit einer person.*-Entität."
+        }
+      }
+    },
+    "update_person": {
+      "name": "Person ändern",
+      "description": "Ändert eine Person; nicht angegebene Felder bleiben unverändert (nur Admins).",
+      "fields": {
+        "person_id": {
+          "name": "Person",
+          "description": "ID der Person (per_…). Steht im Attribut person_id des Personen-Sensors."
+        },
+        "name": {
+          "name": "Name",
+          "description": "Anzeigename."
+        },
+        "icon": {
+          "name": "Icon",
+          "description": "Material-Design-Icon, z. B. mdi:dishwasher."
+        },
+        "color": {
+          "name": "Farbe",
+          "description": "Optionale CSS-Farbe, z. B. #3f51b5. Leerer Text entfernt sie."
+        },
+        "ha_person_entity": {
+          "name": "Home-Assistant-Person",
+          "description": "Optionale Verknüpfung mit einer person.*-Entität."
+        }
+      }
+    },
+    "remove_person": {
+      "name": "Person entfernen",
+      "description": "Löscht eine Person samt Soll-Vorgaben. Das Log bleibt erhalten (nur Admins).",
+      "fields": {
+        "person_id": {
+          "name": "Person",
+          "description": "ID der Person (per_…). Steht im Attribut person_id des Personen-Sensors."
+        }
+      }
+    },
+    "set_target": {
+      "name": "Soll-Vorgabe setzen",
+      "description": "Legt fest oder ändert, wie oft eine Person eine Aufgabe pro Periode erledigen soll. Liefert die target_id zurück (nur Admins).",
+      "fields": {
+        "person_id": {
+          "name": "Person",
+          "description": "ID der Person (per_…). Steht im Attribut person_id des Personen-Sensors."
+        },
+        "task_id": {
+          "name": "Aufgabe",
+          "description": "ID der Aufgabe (tsk_…). Steht im Attribut task_id des „zuletzt erledigt“-Sensors."
+        },
+        "period": {
+          "name": "Periode",
+          "description": "day, week oder month."
+        },
+        "count": {
+          "name": "Soll-Anzahl",
+          "description": "Wie oft pro Periode (≥ 1)."
+        }
+      }
+    },
+    "remove_target": {
+      "name": "Soll-Vorgabe entfernen",
+      "description": "Löscht eine Soll-Vorgabe (nur Admins).",
+      "fields": {
+        "target_id": {
+          "name": "Soll-Vorgabe-ID",
+          "description": "ID der Soll-Vorgabe (tgt_…). Steht im Attribut target_id des Soll-Sensors."
+        }
       }
     }
   }
