@@ -8,12 +8,14 @@ CRUD-Operationen; die *fachliche* Logik (Perioden/Statistik) liegt in targets.py
 
 from __future__ import annotations
 
+from datetime import UTC
 import uuid
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
 from .const import (
+    F_TIMESTAMP,
     STORAGE_KEY,
     STORAGE_MINOR_VERSION,
     STORAGE_VERSION,
@@ -22,6 +24,7 @@ from .const import (
     STORE_TARGETS,
     STORE_TASKS,
 )
+from .targets import parse_ts
 
 SAVE_DELAY = 2  # Sekunden Debounce für Schreibvorgänge
 
@@ -53,6 +56,16 @@ class HausarbeitMigratableStore(Store):
             for key in (STORE_PERSONS, STORE_TASKS, STORE_TARGETS, STORE_EXECUTIONS):
                 if isinstance(old_data.get(key), list):
                     data[key] = old_data[key]
+        if old_major_version == 1 and old_minor_version < 2:
+            # 1.2: Zeitstempel einheitlich als UTC speichern (ältere Versionen haben
+            # Offsets wie +02:00 unverändert übernommen). Gleicher Zeitpunkt, nur
+            # normalisierte Darstellung — unlesbare Werte bleiben unangetastet.
+            for execution in data[STORE_EXECUTIONS]:
+                if not isinstance(execution, dict):
+                    continue
+                parsed = parse_ts(execution.get(F_TIMESTAMP, ""))
+                if parsed is not None:
+                    execution[F_TIMESTAMP] = parsed.astimezone(UTC).isoformat()
         return data
 
 
@@ -87,6 +100,10 @@ class HausarbeitStore:
 
     async def async_save_now(self) -> None:
         await self._store.async_save(self.data)
+
+    async def async_remove(self) -> None:
+        """Gespeicherte Datei löschen (beim Entfernen der Integration)."""
+        await self._store.async_remove()
 
     # -- Zugriff -----------------------------------------------------------
     @property
