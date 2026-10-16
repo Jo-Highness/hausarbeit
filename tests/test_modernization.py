@@ -272,3 +272,25 @@ def test_translations_complete():
     reference = keys(json.loads((base / "strings.json").read_text(encoding="utf-8")))
     for file in (base / "translations").glob("*.json"):
         assert keys(json.loads(file.read_text(encoding="utf-8"))) == reference, file.name
+
+
+async def test_service_color_validated_and_clearable(setup_integration, hass):
+    import voluptuous as vol
+
+    _entry, coordinator = setup_integration
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN, "add_person", {"name": "X", "color": "red;}"}, blocking=True
+        )
+    res = await hass.services.async_call(
+        DOMAIN,
+        "add_person",
+        {"name": "Y", "color": " #00ff00 "},
+        blocking=True,
+        return_response=True,
+    )
+    assert coordinator.store.get_person(res["id"])["color"] == "#00ff00"
+    await hass.services.async_call(
+        DOMAIN, "update_person", {"person_id": res["id"], "color": ""}, blocking=True
+    )
+    assert coordinator.store.get_person(res["id"])["color"] is None
