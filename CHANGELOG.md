@@ -34,8 +34,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   admins may delete any entry, other users only entries they logged themselves (the
   claim card's undo keeps working for family members).
 - Entity names and the unit of measurement are translated (`translation_key`); the unit
-  is now `tasks` (was `Aufgaben`). Existing entity IDs are kept; new sensors get English
-  name-based IDs (e.g. `…_last_done` instead of `…_zuletzt_erledigt`).
+  is now `tasks` (was `Aufgaben`). Existing entity IDs are kept; IDs of newly created
+  sensors follow the translated name (e.g. `…_woche` instead of `…_week` on German
+  systems).
 - Options flow uses selectors (dropdowns, icon picker, person entity picker, number
   boxes); optional fields can be cleared; person colors are validated as safe CSS colors.
 - Actions and WebSocket commands are registered once in `async_setup`; errors are raised

@@ -184,7 +184,9 @@ live; Entitäten müssen nicht konfiguriert werden.
 ## Entitäten
 
 Alle Entitäten hängen an einem Dienst-Gerät mit dem Namen deines Haushalts (Standard
-„Hausarbeit"). Die Entity-IDs unten gehen von diesem Standardnamen aus.
+„Hausarbeit"). Die Entity-IDs unten gehen von diesem Standardnamen und deutscher
+Systemsprache aus; sie werden beim Anlegen aus dem Namen gebildet – die tatsächlichen IDs
+siehst du unter *Entwicklerwerkzeuge → Zustände*.
 
 ### Personen-Sensor – je Person
 
@@ -209,7 +211,8 @@ Beispiel: `sensor.hausarbeit_anna`
 
 ### Soll-Sensor – je Soll-Vorgabe
 
-Beispiel: `sensor.hausarbeit_anna_spulmaschine_week` (Name „Anna · Spülmaschine (Woche)").
+Beispiel: `sensor.hausarbeit_anna_spulmaschine_woche` (Name „Anna · Spülmaschine (Woche)";
+vor 0.2.0 angelegte Vorgaben heißen `…_week`).
 
 - **Zustand:** Ist-Anzahl in der laufenden Periode.
 - **Attribute** (Namen bleiben für bestehende Automationen unverändert):
@@ -227,8 +230,7 @@ Beispiel: `sensor.hausarbeit_anna_spulmaschine_week` (Name „Anna · Spülmasch
 
 ### „Zuletzt erledigt"-Sensor – je Aufgabe
 
-Beispiel: `sensor.hausarbeit_spulmaschine_last_done` (Diagnose, Zeitstempel; bei
-Installationen vor 0.2.0 `…_zuletzt_erledigt`).
+Beispiel: `sensor.hausarbeit_spulmaschine_zuletzt_erledigt` (Diagnose, Zeitstempel).
 
 - **Zustand:** wann die Aufgabe zuletzt erledigt wurde (leer, falls noch nie).
 - **Attribute:** `task_id`, `person_id`, `person_name` der letzten Erledigung.
@@ -314,7 +316,7 @@ conditions:
   - condition: time
     weekday: sun
   - condition: numeric_state
-    entity_id: sensor.hausarbeit_anna_spulmaschine_week
+    entity_id: sensor.hausarbeit_anna_spulmaschine_woche
     attribute: rest
     above: 0
 actions:
@@ -323,8 +325,8 @@ actions:
       title: Hausarbeit
       message: >-
         Noch offen diese Woche:
-        {{ state_attr('sensor.hausarbeit_anna_spulmaschine_week', 'rest') }} × Spülmaschine
-        ({{ state_attr('sensor.hausarbeit_anna_spulmaschine_week', 'erfuellungsgrad') }} % erledigt).
+        {{ state_attr('sensor.hausarbeit_anna_spulmaschine_woche', 'rest') }} × Spülmaschine
+        ({{ state_attr('sensor.hausarbeit_anna_spulmaschine_woche', 'erfuellungsgrad') }} % erledigt).
 ```
 
 ### Jede Erledigung melden
@@ -377,7 +379,7 @@ triggers:
 conditions:
   - condition: template
     value_template: >-
-      {% set last = states('sensor.hausarbeit_bad_putzen_last_done') %}
+      {% set last = states('sensor.hausarbeit_bad_putzen_zuletzt_erledigt') %}
       {{ last in ['unknown', 'unavailable'] or
          (now() - as_datetime(last)).days >= 3 }}
 actions:
@@ -492,9 +494,10 @@ Ja – bis auf die Einstellungen ist alles auch als [Aktion](#aktionen-services)
 ## Update auf 0.2.0
 
 - Mindestversion ist jetzt Home Assistant **2025.2.0**.
-- Bestehende Entity-IDs bleiben erhalten. Sensoren, die **nach** dem Update entstehen,
-  bekommen englische, namensbasierte IDs, z. B. `sensor.hausarbeit_spulmaschine_last_done`
-  statt `…_zuletzt_erledigt` (die Anzeigenamen folgen weiter deiner Sprache).
+- Bestehende Entity-IDs bleiben erhalten. Die Namen neuer Sensoren sind jetzt übersetzt,
+  daher können sich die IDs **neu angelegter** Sensoren vom alten Muster unterscheiden
+  (z. B. neue Wochen-Vorgaben `…_woche` statt `…_week`; je nach HA-Version und Sprache
+  `…_last_done` statt `…_zuletzt_erledigt`).
 - Die Einheit der Personen- und Soll-Sensoren ist jetzt `tasks` (vorher `Aufgaben`).
   Meldet Home Assistant eine geänderte Statistik-Einheit (*Entwicklerwerkzeuge →
   Statistiken*), die Einheit aktualisieren – die Werte sind dieselben Anzahlen.

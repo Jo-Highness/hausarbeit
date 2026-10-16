@@ -184,7 +184,9 @@ not need any entity configuration.
 ## Entities
 
 All entities belong to one service device named after your household (default
-"Hausarbeit"). Entity IDs below assume that default name.
+"Hausarbeit"). Entity IDs below assume that default name and an English system
+language; they are derived from the name when the sensor is created – check the actual
+IDs in *Developer tools → States*.
 
 ### Person sensor – one per person
 
@@ -486,9 +488,10 @@ Yes – everything except the settings is also available as [actions](#actions-s
 ## Upgrading to 0.2.0
 
 - Minimum Home Assistant version is now **2025.2.0**.
-- Existing entity IDs stay the same. Sensors created **after** the update get English
-  name-based IDs, e.g. `sensor.hausarbeit_dishwasher_last_done` instead of
-  `…_zuletzt_erledigt` (display names still follow your language).
+- Existing entity IDs stay the same. Entity names are now translated, so IDs of sensors
+  created **after** the update can differ from the old pattern (e.g. new weekly targets
+  `…_woche` instead of `…_week` on a German system; depending on HA version and language
+  `…_last_done` instead of `…_zuletzt_erledigt`).
 - The unit of the person and target sensors is now `tasks` (was `Aufgaben`). If Home
   Assistant reports a changed statistics unit (*Developer tools → Statistics*), choose to
   update the unit – the values are the same counts.
