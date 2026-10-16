@@ -9,4 +9,4 @@ Delivered:
 - `targets-card.png` — the target-vs-actual card
 - `config-flow.png` — the UI setup form
 - `entities.png` — the integration entry & entities
-- `integrations-overview.png`
+- `integrations-overview.png` — currently only shows the Home Assistant loading screen (not used in the README; re-capture needed)

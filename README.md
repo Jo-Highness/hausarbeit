@@ -8,667 +8,497 @@
 
 [![HACS: Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
 [![Validate](https://img.shields.io/github/actions/workflow/status/Jo-Highness/hausarbeit/validate.yml?style=for-the-badge&label=Validate)](https://github.com/Jo-Highness/hausarbeit/actions/workflows/validate.yml)
+[![Tests](https://img.shields.io/github/actions/workflow/status/Jo-Highness/hausarbeit/test.yml?style=for-the-badge&label=Tests)](https://github.com/Jo-Highness/hausarbeit/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](./LICENSE)
-[![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2024.7.0%2B-41BDF5.svg?style=for-the-badge&logo=home-assistant&logoColor=white)](https://www.home-assistant.io/)
+[![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2025.2.0%2B-41BDF5.svg?style=for-the-badge&logo=home-assistant&logoColor=white)](https://www.home-assistant.io/)
 
-> Who did which chore, and when? The **Hausarbeit-Tracker** documents
-> every completed task per person, keeps statistics and compares **target vs. actual**
-> per period – fully local, no cloud, UI-first and with three bundled
-> Lovelace cards.
+**Track who did which household chore, and when** – with statistics, a ranking and
+per-person targets ("Anna: dishwasher 3×/week"), plus three bundled Lovelace cards.
+Everything runs locally inside Home Assistant; no cloud, no YAML required.
 
-### 🌍 English / Español
+> 🇪🇸 **Español** — Registra quién hizo qué tarea del hogar y cuándo, con estadísticas,
+> clasificación y objetivos por persona. La interfaz de la integración y de las tarjetas
+> está disponible en español.
 
-**🇬🇧 English** — *Who did which chore, and when?* The **Hausarbeit-Tracker** logs every
-completed chore per person, provides statistics and rankings, and compares **target vs.
-actual** per period (day / week / month) — fully local, no cloud, UI-first, with three
-bundled Lovelace cards. The user interface ships in German, English and Spanish.
+## Quick start
 
-**🇪🇸 Español** — *¿Quién hizo qué tarea del hogar y cuándo?* El **Hausarbeit-Tracker**
-registra cada tarea completada por persona, ofrece estadísticas y clasificaciones, y
-compara **objetivo frente a real** por periodo (día / semana / mes) — totalmente local,
-sin nube, centrado en la interfaz y con tres tarjetas Lovelace incluidas. La interfaz
-está disponible en alemán, inglés y español. *(La interfaz de usuario está disponible en español.)*
+1. **Install** via HACS:
+   [![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Jo-Highness&repository=hausarbeit&category=integration)
+   → **Download**, then **restart Home Assistant**.
+2. **Add the integration**: *Settings → Devices & services → Add integration →
+   "Hausarbeit-Tracker"* (only a household name is asked).
+3. **Create people**: on the integration click **Configure → People → Add person**
+   (e.g. "Anna", "Ben").
+4. **Create chores**: **Configure → Tasks → Add task** (e.g. "Empty the dishwasher").
+5. **Add the card** to a dashboard: *Edit dashboard → Add card → search "Hausarbeit"* and
+   pick **"Hausarbeit: Log a chore"** – tap a person, tap a chore, done. Sensors such as
+   `sensor.hausarbeit_anna` appear automatically.
+
+Optional: **Configure → Targets** ("Anna should do the dishwasher 3× per week") and the
+stats and targets cards.
+
+| Log a chore | Statistics & ranking | Target vs. actual |
+|:---:|:---:|:---:|
+| ![Claim card](./images/claim-card.png) | ![Statistics card](./images/stats-card.png) | ![Targets card](./images/targets-card.png) |
 
 ---
 
-## Table of Contents
+## Table of contents
 
 - [Features](#features)
-- [Screenshots](#screenshots)
 - [Installation](#installation)
-  - [Via HACS (Custom Repository)](#via-hacs-custom-repository)
-  - [Manual Installation](#manual-installation)
-- [Setup](#setup)
-  - [Config Flow](#config-flow-create-a-household)
-  - [Options Flow](#options-flow-settings--management)
-  - [Tasks, Persons & Targets](#tasks-persons--targets)
-- [The Three Lovelace Cards](#the-three-lovelace-cards)
-- [Architecture & Data Model](#architecture--data-model)
-  - [Component Overview](#component-overview)
-  - [Data Flow When Logging](#data-flow-when-logging-an-execution)
-  - [Store Schema](#store-schema)
+- [Configuration](#configuration)
+- [Finding IDs (per_… / tsk_… / tgt_…)](#finding-ids)
+- [The three Lovelace cards](#the-three-lovelace-cards)
 - [Entities](#entities)
-- [Services](#services)
-- [Example Automations](#example-automations)
-- [Raw Data & Export](#raw-data--export)
-- [FAQ & Troubleshooting](#faq--troubleshooting)
+- [Actions (services)](#actions-services)
+- [Event](#event)
+- [Example automations](#example-automations)
+- [WebSocket API & raw data](#websocket-api--raw-data)
+- [Permissions](#permissions)
+- [Architecture & data model](#architecture--data-model)
+- [FAQ & troubleshooting](#faq--troubleshooting)
+- [Upgrading to 0.2.0](#upgrading-to-020)
 - [License](#license)
 
 ---
 
 ## Features
 
-- ✅ **Tasks** freely definable (name, icon, category, points/weight, active/inactive).
-- 👤 **Persons** management, optionally linked to an existing `person.*` entity.
-- 📝 **Claim & backfill**: log completions instantly with a click, or backfill them with
-  a different timestamp and a note.
-- 🎯 **Target/actual per period** – targets per person and task for **day**, **week**
-  or **month** (e.g. "Anna: dishwasher 3×/week"), including remaining, completion rate and
-  an "on track" indicator.
-- 📊 **Statistics & ranking** – aggregated evaluation over a configurable
-  time range (default **90 days**) with a breakdown by task and time window
-  (today / 7 / 30 / 90 days / total).
-- 🗂️ **Raw data export** – the complete execution log is available via the WebSocket API
-  and can be filtered.
-- 🃏 **Three bundled Lovelace cards** that are **automatically registered as a resource**
-  by the integration – no separate HACS frontend installation required.
-- 🖱️ **UI-first**: complete setup via config and options flow, **no YAML required**.
-  Services are nevertheless available for automations.
-- 🔒 **Local**: `local_push`, no external communication, data lives in HA storage.
-
----
-
-## Screenshots
-
-> Captured from a demo Home Assistant with fictional data.
-
-**The three bundled Lovelace cards**
-
-| Log a chore | Statistics & ranking | Target vs. actual |
-|:---:|:---:|:---:|
-| ![Claim card](./images/claim-card.png) | ![Statistics card](./images/stats-card.png) | ![Targets card](./images/targets-card.png) |
-
-**Setup & entities**
-
-| Setup (config flow) | Integration & entities |
-|:---:|:---:|
-| ![The UI setup form](./images/config-flow.png) | ![The integration entry and its entities](./images/entities.png) |
-
----
+- ✅ **Chores** with name, icon, category, points/weight and an active flag.
+- 👤 **People**, optionally linked to a Home Assistant `person.*` entity and with a color
+  for the claim card.
+- 📝 **Log & backfill**: one tap logs a chore; optionally with another date/time and a
+  note. The claim card can undo the last entry.
+- 🎯 **Targets per period** (day / week / month) with actual, remaining, completion rate
+  and an "on pace" flag (`im_soll`).
+- 📊 **Statistics & ranking** over a configurable period (default 90 days) plus fixed
+  windows: today, 7, 30 and 90 days, current month and total.
+- 🗂️ **Raw data** via the WebSocket API (e.g. for exports).
+- 🃏 **Three Lovelace cards**, delivered and loaded by the integration itself – no
+  separate frontend download.
+- 🌍 UI in **English, German and Spanish**.
+- 🔒 **Local only**: data lives in Home Assistant's storage (`.storage/hausarbeit_data`).
 
 ## Installation
 
-### Via HACS (Custom Repository)
+### HACS (custom repository)
 
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Jo-Highness&repository=hausarbeit&category=integration)
+The integration is not (yet) in the HACS default list, so it is added as a custom
+repository:
 
-Click the button above to open this repository directly in HACS, or add it manually — the
-integration is not (yet) part of the HACS default index and is therefore added as a
-**custom repository**:
+1. Open **HACS** → **⋮ → Custom repositories**.
+2. URL `https://github.com/Jo-Highness/hausarbeit`, type **Integration** → **Add**.
+3. Open the repository in HACS → **Download**.
+4. **Restart Home Assistant**.
+5. *Settings → Devices & services → Add integration →* **Hausarbeit-Tracker**.
 
-1. Open **HACS** in the sidebar.
-2. Switch to **Integrations**.
-3. Open the **⋮ (3-dot menu)** in the top right → **Custom repositories**.
-4. Enter the following values:
-   - **URL:** `https://github.com/Jo-Highness/hausarbeit`
-   - **Category:** `Integration`
-5. Click **Add**, then select the repository in the list and
-   **install** it.
-6. **Restart Home Assistant**.
-7. Under **Settings → Devices & Services → Add Integration**, search for
-   **"Hausarbeit-Tracker"** and run through the config flow.
+Or use the "Open in HACS" button in the [Quick start](#quick-start).
 
-The Lovelace cards are automatically registered as a frontend resource when the integration
-starts – a separate HACS frontend entry is **not** required.
+### Manual
 
-### Manual Installation
+Copy `custom_components/hausarbeit` into `<config>/custom_components/`, restart Home
+Assistant and add the integration as above.
 
-1. Download (or clone) this repository.
-2. Copy the folder `custom_components/hausarbeit` into the `custom_components` directory of
-   your Home Assistant configuration:
+**Requirements:** Home Assistant **2025.2.0** or newer. Only one household (config
+entry) per Home Assistant instance is supported.
 
-   ```text
-   <config>/custom_components/hausarbeit/
-   ```
+## Configuration
 
-3. **Restart Home Assistant**.
-4. Add the integration as described above.
+Everything is done in the UI: *Settings → Devices & services → Hausarbeit-Tracker →
+**Configure***.
 
-**Minimum requirement:** Home Assistant **2024.7.0** or newer.
+| Menu | What you can do |
+|---|---|
+| **Settings** | **Week start** (first day of a week for weekly targets, default Monday) and **statistics period** in days (1–3650, default 90). |
+| **People** | Add / edit / remove. Fields: name, icon, color (CSS color such as `#3f51b5` or `teal`, empty = theme color), linked HA person. |
+| **Tasks** | Add / edit / remove. Fields: name, icon, category, points (0–100, default 1), active. Inactive tasks are hidden on the claim card but keep their history. |
+| **Targets** | Add or update ("Anna · Dishwasher · week · 3") and remove. The same person + task + period updates the existing target. |
 
----
+Removing a person or task also removes its targets and sensors; the execution log is
+kept. Changing the settings reloads the integration.
 
-## Setup
+| Setup | Integration & entities |
+|:---:|:---:|
+| ![Setup form](./images/config-flow.png) | ![Integration entry and entities](./images/entities.png) |
 
-### Config Flow (create a household)
+<a id="finding-ids"></a>
 
-**One entry per household** is created. When the integration is added, the household is
-initialized (default title "Hausarbeit"). No further mandatory input is required – persons,
-tasks and targets are managed afterwards via the options flow or the cards.
+## Finding IDs (per_… / tsk_… / tgt_…)
 
-### Options Flow (settings & management)
+Actions, card filters and automations use stable IDs instead of names:
 
-Via **Configure** on the integration entry, two global settings as well as the management
-of the master data are available:
+| Item | Prefix | Where to find it |
+|---|---|---|
+| Person | `per_` | attribute `person_id` of the person sensor (e.g. `sensor.hausarbeit_anna`) |
+| Task | `tsk_` | attribute `task_id` of the task's "last done" sensor |
+| Target | `tgt_` | attribute `target_id` of the target sensor; also `person_id` and `task_id` |
+| Execution | `exe_` | response of `hausarbeit.log_execution`, the event `hausarbeit_execution_logged`, or `hausarbeit/log` |
 
-| Option | Key | Meaning | Default |
-|---|---|---|---|
-| Week start | `week_start` | First weekday for period calculation (`0`=Monday … `6`=Sunday, matches Python `weekday()`) | `0` (Monday) |
-| Statistics period | `stats_days` | Default period in days for the statistics aggregation (min. 1, max. 3650) | `90` |
+Open *Developer tools → States*, filter for `hausarbeit` and look at the attributes.
+The add actions (`add_person`, `add_task`, `set_target`) also return the new ID as a
+response.
 
-In addition, the options flow manages:
+## The three Lovelace cards
 
-- **Persons** create / edit / remove,
-- **Tasks** create / edit / remove,
-- **Targets** set / remove.
+The cards are loaded automatically; after installing and restarting, they appear in the
+card picker ("Hausarbeit …"). All options can also be set in the visual card editor.
 
-### Tasks, Persons & Targets
+### `hausarbeit-claim-card` – log a chore
 
-- **Task** (`task`): What gets done. Fields: `name`, optional `icon`, `category`,
-  `points` (weight, default `1`) and `active` (default `true`). Points are factored in as
-  weight in the statistics – so e.g. "clean the bathroom" counts more than "take out the trash".
-- **Person** (`person`): Who does it. Fields: `name`, optional `icon`, `color` and
-  `ha_person_entity` (link to an existing `person.*` entity).
-- **Target** (`target`): How often a person should complete a task per period.
-  Fields: `person_id`, `task_id`, `period` (`day` / `week` / `month`) and `count`
-  (target count).
-
-  > **Example:** "Anna should empty the **dishwasher 3×/week**" →
-  > `period = week`, `count = 3`, `person_id` = Anna, `task_id` = dishwasher.
-
----
-
-## The Three Lovelace Cards
-
-All three cards are loaded automatically by the integration. After installation and a
-restart they can be used directly in the dashboard. If a card does not appear immediately in
-the editor, clearing the browser cache helps (see
-[FAQ](#faq--troubleshooting)).
-
-### `hausarbeit-claim-card` – Complete & backfill
-
-Buttons for logging a completion instantly as well as for backfilling with timestamp/note.
+Pick a person, tap a chore. Optional date/time to backfill, optional note, undo for the
+last entry.
 
 ```yaml
 type: custom:hausarbeit-claim-card
-title: Wer hat's gemacht?      # optional
-# persons:                     # optional: Karte auf bestimmte Personen begrenzen
-#   - per_ab12cd34
-# tasks:                       # optional: Auswahl auf bestimmte Aufgaben begrenzen
-#   - tsk_11aa22bb
-#   - tsk_33cc44dd
-# show_note: true              # optional: Notizfeld einblenden (Default false)
-# columns: 3                   # optional: Spaltenanzahl der Aufgaben-Buttons
+title: Who did it?        # optional
+persons:                  # optional: only these people
+  - per_ab12cd34
+tasks:                    # optional: only these tasks
+  - tsk_11aa22bb
+show_note: true           # optional: show the note field (default false)
+columns: 3                # optional: number of task button columns (default 3)
 ```
 
-> Backfilling is always possible (optional date/time field). An undo button reverts
-> the most recently logged execution.
-
-### `hausarbeit-stats-card` – Statistics & ranking
-
-Shows the ranking of the persons and the breakdown by task/time window.
+### `hausarbeit-stats-card` – statistics & ranking
 
 ```yaml
 type: custom:hausarbeit-stats-card
-title: Hausarbeits-Ranking     # optional
-# days: 30                     # optional: Startzeitraum in Tagen (7 | 30 | 90), umschaltbar
-# default_view: ranking        # optional: ranking | tasks
+title: Chore ranking      # optional
+days: 30                  # optional: initial period 7 | 30 | 90 (switchable on the card)
+default_view: ranking     # optional: ranking | tasks
 ```
 
-### `hausarbeit-targets-card` – Target/actual progress
-
-Progress bar per target for the current period.
+### `hausarbeit-targets-card` – target vs. actual
 
 ```yaml
 type: custom:hausarbeit-targets-card
-title: Soll & Ist             # optional
-# person: per_ab12cd34        # optional: nur Vorgaben einer Person
-# period: week                # optional: day | week | month
+title: Targets            # optional
+person: per_ab12cd34      # optional: only this person's targets
+period: week              # optional: day | week | month
 ```
 
-> ℹ️ **Note:** The cards communicate exclusively via the built-in
-> WebSocket API (see [Architecture](#architecture--data-model)) and require no
-> additional configuration of entities.
-
----
-
-## Architecture & Data Model
-
-### Component Overview
-
-```mermaid
-flowchart LR
-    subgraph UI["Home Assistant UI"]
-        CF["Config-/Options-Flow"]
-        SVC["Services\n(hausarbeit.*)"]
-        CARDS["Lovelace-Karten\nclaim / stats / targets"]
-    end
-
-    STORE[("Store\nhausarbeit_data\nVersion 1")]
-    COORD["HausarbeitCoordinator"]
-    SENSORS["Sensor-Plattform\n(Personen- + Target-Sensoren)"]
-    WS["WebSocket-API\nhausarbeit/*"]
-
-    CF -->|persistiert| STORE
-    SVC -->|mutiert| COORD
-    COORD <-->|liest/schreibt| STORE
-    COORD -->|SIGNAL_UPDATE| SENSORS
-    COORD -->|SIGNAL_UPDATE / subscribe| WS
-    CARDS -->|Kommandos| WS
-    WS --> COORD
-    SENSORS -->|States/Attribute| UI
-```
-
-The **coordinator** is the central instance per config entry
-(`hass.data[DOMAIN][entry_id]`). It encapsulates access to the `Store`, notifies
-the sensors and the WebSocket subscribers on every data change via the dispatcher signal
-`hausarbeit_updated` (`SIGNAL_UPDATE`), and fires the event
-`hausarbeit_execution_logged` (`EVENT_EXECUTION_LOGGED`) on the HA event bus on every new
-execution.
-
-### Data Flow When Logging an Execution
-
-```mermaid
-sequenceDiagram
-    participant U as Nutzer / Automation
-    participant C as Claim-Karte / Service
-    participant WS as WebSocket-API / Service-Handler
-    participant CO as Coordinator
-    participant ST as Store (hausarbeit_data)
-    participant S as Sensoren + Subscriber
-
-    U->>C: „Erledigt" (person, task, optional ts/note)
-    C->>WS: hausarbeit/log_execution
-    WS->>CO: log_execution(person_id, task_id, ts?, note?)
-    CO->>ST: neuen Datensatz exe_… anhängen (+ async_save)
-    CO-->>WS: execution_id (exe_…)
-    CO->>S: SIGNAL_UPDATE (hausarbeit_updated)
-    CO-->>U: EVENT_EXECUTION_LOGGED (Event-Bus)
-    S-->>U: aktualisierte States/Attribute
-```
-
-### Store Schema
-
-Persisted via `homeassistant.helpers.storage.Store` under the key
-`hausarbeit_data`, **STORAGE_VERSION = 1** (major, with `async_migrate_func` for future
-migrations; STORAGE_MINOR_VERSION = 1 for forward-compatible additions). The
-stored document has four top-level keys:
-
-```jsonc
-{
-  "persons": [
-    {
-      "id": "per_ab12cd34",          // ID-Präfix per_ + 8 Hex
-      "name": "Anna",
-      "icon": "mdi:account",         // optional
-      "color": "#ff8800",            // optional
-      "ha_person_entity": "person.anna", // optional, Verknüpfung
-      "created": "2026-08-19T08:00:00+00:00" // ISO-8601 UTC
-    }
-  ],
-  "tasks": [
-    {
-      "id": "tsk_11aa22bb",          // ID-Präfix tsk_
-      "name": "Spülmaschine ausräumen",
-      "icon": "mdi:dishwasher",      // optional
-      "category": "Küche",           // optional
-      "points": 1,                    // Gewicht, Default 1
-      "active": true,                 // Default true
-      "created": "2026-08-19T08:00:00+00:00"
-    }
-  ],
-  "targets": [
-    {
-      "id": "tgt_55ee66ff",          // ID-Präfix tgt_
-      "person_id": "per_ab12cd34",
-      "task_id": "tsk_11aa22bb",
-      "period": "week",              // day | week | month
-      "count": 3                      // Soll-Anzahl pro Periode
-    }
-  ],
-  "executions": [
-    {
-      "id": "exe_77gg88hh",          // ID-Präfix exe_
-      "person_id": "per_ab12cd34",
-      "task_id": "tsk_11aa22bb",
-      "ts": "2026-08-19T18:30:00+00:00", // ISO-8601 UTC
-      "note": "nachgetragen"         // optional
-    }
-  ]
-}
-```
-
-**Field reference** (from `const.py`):
-
-| Field | Constant | Usage |
-|---|---|---|
-| `id` | `F_ID` | unique ID with prefix `per_` / `tsk_` / `tgt_` / `exe_` |
-| `name` | `F_NAME` | person / task |
-| `icon` | `F_ICON` | optional MDI icon |
-| `color` | `F_COLOR` | optional color of the person |
-| `ha_person_entity` | `F_HA_PERSON` | optional link to `person.*` |
-| `created` | `F_CREATED` | ISO-8601 UTC, creation timestamp |
-| `category` | `F_CATEGORY` | optional task category |
-| `points` | `F_POINTS` | weight of the task (default 1) |
-| `active` | `F_ACTIVE` | task active? (default true) |
-| `person_id` | `F_PERSON_ID` | foreign key in target/execution |
-| `task_id` | `F_TASK_ID` | foreign key in target/execution |
-| `period` | `F_PERIOD` | `day` / `week` / `month` |
-| `count` | `F_COUNT` | target count per period |
-| `ts` | `F_TIMESTAMP` | timestamp of the execution (ISO-8601 UTC) |
-| `note` | `F_NOTE` | optional note for the execution |
-
----
+The cards talk to the integration through its WebSocket API and update live; they do
+not need any entity configuration.
 
 ## Entities
 
-All entities are attached to one device per household (manufacturer `hausarbeit`, model
-`Haushalt`). `unique_id`s are derived stably from the respective record ID, so that
-renames and adjustments in the UI are preserved.
+All entities belong to one service device named after your household (default
+"Hausarbeit"). Entity IDs below assume that default name.
 
-### Person sensor (one per person)
+### Person sensor – one per person
 
-- **State:** executions or weighted points within the statistics period (`stats_days`,
-  default 90 days).
+Example: `sensor.hausarbeit_anna`
+
+- **State:** number of chores the person completed within the statistics period
+  (`stats_days`, default 90 days). This is a count, not points; the points total is an
+  attribute.
+- **Unit:** `tasks`
 - **Attributes:**
-  - breakdown **per task** (how often/completed points per task),
-  - time windows **`today` / `7d` / `30d` / `90d` / `all`** (from `STAT_WINDOWS_DAYS`;
-    `today` = since the start of the local calendar day, `all` = total).
-- `unique_id`: derived from the person ID (`per_…`).
 
-### Target sensor (one per target)
+| Attribute | Meaning |
+|---|---|
+| `person_id` | ID of the person (`per_…`) |
+| `stats_days` | statistics period in days |
+| `breakdown` | `{task name: count}` within the statistics period |
+| `today` | since local midnight |
+| `d7`, `d30`, `d90` | last 7 / 30 / 90 days (rolling) |
+| `current_month` | since the 1st of the current month |
+| `total` | all time |
+| `points_total` | sum of task points, all time |
 
-- **State:** **actual** count of the current period.
-- **Attributes:**
-  - `Soll` (from `count`),
-  - `Rest` (target − actual, min. 0),
-  - `Erfüllungsgrad` in % (actual/target),
-  - `Periodenstart` / `Periodenende` (taking `week_start` into account),
-  - `on_track` (bool – is the person on plan for the elapsed portion of the period?).
-- `unique_id`: derived from the target ID (`tgt_…`).
+### Target sensor – one per target
 
-### Optional: "Last completed" per task
+Example: `sensor.hausarbeit_anna_dishwasher_week` (name "Anna · Dishwasher (week)").
 
-Per task, a sensor can be available whose state/attributes show the **last completion**
-(by whom / when) – useful for dashboards and automations like "X has not been done for
-N days".
+- **State:** actual count in the current period.
+- **Attributes** (names are kept for compatibility with existing automations):
 
----
+| Attribute | Meaning |
+|---|---|
+| `target_id`, `person_id`, `task_id` | IDs |
+| `soll` | target count per period |
+| `ist` | actual count in the current period |
+| `rest` | remaining (target − actual, never below 0) |
+| `erfuellungsgrad` | completion in % |
+| `im_soll` | `true` if the person is on pace for the elapsed part of the period (or done) |
+| `periode` | `day`, `week` or `month` |
+| `periodenstart`, `periodenende` | current period (local time, end exclusive) |
 
-## Services
+### "Last done" sensor – one per task
 
-All services live in the domain `hausarbeit`. Field names exactly match the
-constants from `const.py`.
+Example: `sensor.hausarbeit_dishwasher_last_done` (diagnostic, timestamp).
 
-### `hausarbeit.log_execution` – log a completion
+- **State:** when the task was last completed (empty if never).
+- **Attributes:** `task_id`, `person_id`, `person_name` of the last completion.
+
+### When do the sensors update?
+
+Immediately on every change (logging, editing, removing) **and** every full hour – which
+includes local midnight. That keeps "today", the rolling windows, `im_soll` and the
+current period correct even if nobody logs anything.
+
+## Actions (services)
+
+All actions are in the `hausarbeit` domain and are described in *Developer tools →
+Actions*. Only `log_execution` may be called by every user; all other actions require an
+administrator (automations and scripts are always allowed).
+
+| Action | Fields (required **bold**) | Response |
+|---|---|---|
+| `log_execution` | **person_id**, **task_id**, ts, note | `execution_id` |
+| `delete_execution` | **execution_id** | – |
+| `correct_execution` | **execution_id**, person_id, task_id, ts, note | – |
+| `add_task` | **name**, icon, category, points, active | `id` |
+| `update_task` | **task_id**, name, icon, category, points, active | – |
+| `remove_task` | **task_id** | – |
+| `add_person` | **name**, icon, color, ha_person_entity | `id` |
+| `update_person` | **person_id**, name, icon, color, ha_person_entity | – |
+| `remove_person` | **person_id** | – |
+| `set_target` | **person_id**, **task_id**, **period** (`day`/`week`/`month`), **count** | `target_id` |
+| `remove_target` | **target_id** | – |
+
+`ts` without a time zone is interpreted as Home Assistant's local time. In `update_*`
+actions, omitted fields stay unchanged; an empty `color` removes the color.
 
 ```yaml
-service: hausarbeit.log_execution
+action: hausarbeit.log_execution
 data:
   person_id: per_ab12cd34
   task_id: tsk_11aa22bb
-  # ts: "2026-08-19T18:30:00+00:00"   # optional, sonst „jetzt"
-  # note: "vor dem Abendessen"        # optional
+  ts: "2026-10-15 18:30:00"     # optional, default: now
+  note: before dinner           # optional
 ```
 
-### `hausarbeit.delete_execution` – delete a completion
-
 ```yaml
-service: hausarbeit.delete_execution
-data:
-  execution_id: exe_77gg88hh
-```
-
-### `hausarbeit.correct_execution` – correct a completion
-
-```yaml
-service: hausarbeit.correct_execution
-data:
-  execution_id: exe_77gg88hh
-  # person_id: per_ab12cd34   # optional: neuer Verursacher
-  # task_id: tsk_33cc44dd     # optional: andere Aufgabe
-  # ts: "2026-08-18T09:00:00+00:00"  # optional: korrigierter Zeitpunkt
-  # note: "korrigiert"        # optional
-```
-
-### `hausarbeit.add_task` – create a task
-
-```yaml
-service: hausarbeit.add_task
-data:
-  name: Bad putzen
-  # icon: mdi:shower
-  # category: Bad
-  # points: 3
-  # active: true
-```
-
-### `hausarbeit.update_task` – edit a task
-
-```yaml
-service: hausarbeit.update_task
-data:
-  task_id: tsk_11aa22bb
-  # name: Küche wischen
-  # icon: mdi:broom
-  # category: Küche
-  # points: 2
-  # active: false
-```
-
-### `hausarbeit.remove_task` – remove a task
-
-```yaml
-service: hausarbeit.remove_task
-data:
-  task_id: tsk_11aa22bb
-```
-
-### `hausarbeit.add_person` – create a person
-
-```yaml
-service: hausarbeit.add_person
-data:
-  name: Anna
-  # icon: mdi:account
-  # color: "#ff8800"
-  # ha_person_entity: person.anna
-```
-
-### `hausarbeit.update_person` – edit a person
-
-```yaml
-service: hausarbeit.update_person
-data:
-  person_id: per_ab12cd34
-  # name: Anna M.
-  # icon: mdi:account-heart
-  # color: "#3366ff"
-  # ha_person_entity: person.anna
-```
-
-### `hausarbeit.remove_person` – remove a person
-
-```yaml
-service: hausarbeit.remove_person
-data:
-  person_id: per_ab12cd34
-```
-
-### `hausarbeit.set_target` – set a target
-
-```yaml
-service: hausarbeit.set_target
+action: hausarbeit.set_target
 data:
   person_id: per_ab12cd34
   task_id: tsk_11aa22bb
-  period: week        # day | week | month
+  period: week
   count: 3
 ```
 
-### `hausarbeit.remove_target` – remove a target
+Using the response in a script:
 
 ```yaml
-service: hausarbeit.remove_target
-data:
-  target_id: tgt_55ee66ff
+sequence:
+  - action: hausarbeit.add_task
+    data:
+      name: Clean the bathroom
+      icon: mdi:shower
+      points: 3
+    response_variable: task
+  - action: persistent_notification.create
+    data:
+      message: "New task ID: {{ task.id }}"
 ```
 
----
+## Event
 
-## Example Automations
+Every new log entry fires `hausarbeit_execution_logged` with the data `execution_id`,
+`person_id`, `person_name`, `task_id`, `task_name` and `ts` (ISO 8601, UTC).
 
-### 1. Reminder when a target is not met by the end of the period
+## Example automations
 
-Checks a target sensor on Sundays at 19:00: if the completion rate is below 100 % or
-there is still a remaining amount, a reminder is sent.
+### Reminder on Sunday evening if a weekly target is still open
 
 ```yaml
-alias: Hausarbeit – Wochen-Soll erinnern
-trigger:
-  - platform: time
+alias: Chores – weekly target reminder
+triggers:
+  - trigger: time
     at: "19:00:00"
-condition:
+conditions:
   - condition: time
-    weekday:
-      - sun
+    weekday: sun
   - condition: numeric_state
-    entity_id: sensor.hausarbeit_soll_anna_spulmaschine
-    attribute: Rest
+    entity_id: sensor.hausarbeit_anna_dishwasher_week
+    attribute: rest
     above: 0
-action:
-  - service: notify.mobile_app_anna
+actions:
+  - action: notify.mobile_app_anna
     data:
-      title: "🧹 Hausarbeit"
+      title: Chores
       message: >-
-        Noch offen diese Woche: {{ state_attr('sensor.hausarbeit_soll_anna_spulmaschine',
-        'Rest') }} × Spülmaschine (Erfüllungsgrad
-        {{ state_attr('sensor.hausarbeit_soll_anna_spulmaschine', 'Erfüllungsgrad') }} %).
+        Still open this week:
+        {{ state_attr('sensor.hausarbeit_anna_dishwasher_week', 'rest') }} × dishwasher
+        ({{ state_attr('sensor.hausarbeit_anna_dishwasher_week', 'erfuellungsgrad') }} % done).
 ```
 
-### 2. Notification when someone logs a task
-
-Uses the event `hausarbeit_execution_logged`, which is fired on the event bus on every new
-execution.
+### Announce every completed chore
 
 ```yaml
-alias: Hausarbeit – Erledigung melden
-trigger:
-  - platform: event
+alias: Chores – announce completion
+triggers:
+  - trigger: event
     event_type: hausarbeit_execution_logged
-action:
-  - service: notify.familie
+actions:
+  - action: notify.family
     data:
-      title: "✅ Hausarbeit erledigt"
-      message: >-
-        {{ trigger.event.data.person_id }} hat {{ trigger.event.data.task_id }} erledigt
-        ({{ trigger.event.data.ts }}).
+      title: Chore done
+      message: "{{ trigger.event.data.person_name }} did {{ trigger.event.data.task_name }}."
 ```
 
-> 💡 Alternatively, instead of the event, the **state change** of a person sensor
-> (`state_changed`) can serve as the trigger.
-
-### 3. Weekly ranking as a notification
-
-Sends a short ranking text on Monday mornings based on the person sensors.
+### Weekly ranking on Monday morning
 
 ```yaml
-alias: Hausarbeit – Wochenranking
-trigger:
-  - platform: time
+alias: Chores – weekly ranking
+triggers:
+  - trigger: time
     at: "08:00:00"
-condition:
+conditions:
   - condition: time
-    weekday:
-      - mon
-action:
-  - variables:
-      leute:
-        - sensor.hausarbeit_anna
-        - sensor.hausarbeit_ben
-  - service: notify.familie
+    weekday: mon
+actions:
+  - action: notify.family
     data:
-      title: "🏆 Hausarbeits-Ranking (letzte 7 Tage)"
+      title: Chore ranking (last 7 days)
       message: >-
-        {% for e in leute | sort(attribute='0', reverse=true) %}
-        {{ state_attr(e, 'friendly_name') }}:
-        {{ state_attr(e, '7d') | default(0) }} Punkte
+        {% set people = ['sensor.hausarbeit_anna', 'sensor.hausarbeit_ben'] %}
+        {% set ns = namespace(rows=[]) %}
+        {% for e in people %}
+          {% set ns.rows = ns.rows + [{'name': state_attr(e, 'friendly_name'),
+                                       'count': state_attr(e, 'd7') | int(0)}] %}
+        {% endfor %}
+        {% for r in ns.rows | sort(attribute='count', reverse=true) %}
+        {{ loop.index }}. {{ r.name }}: {{ r.count }}
         {% endfor %}
 ```
 
----
+### Nag if a chore has not been done for 3 days
 
-## Raw Data & Export
-
-The complete execution log is available via the WebSocket API. The cards and
-your own scripts use the following commands for this:
-
-| WebSocket type | Constant | Purpose |
-|---|---|---|
-| `hausarbeit/tasks` | `WS_TASKS` | list of all tasks |
-| `hausarbeit/persons` | `WS_PERSONS` | list of all persons |
-| `hausarbeit/targets` | `WS_TARGETS` | targets incl. actual / target / remaining / % |
-| `hausarbeit/log` | `WS_LOG` | **execution log (with filter/limit) – basis for the export** |
-| `hausarbeit/stats` | `WS_STATS` | aggregated statistics (parameter `days`) |
-| `hausarbeit/log_execution` | `WS_LOG_EXECUTION` | logs an execution and returns the `execution_id` |
-| `hausarbeit/delete_execution` | `WS_DELETE_EXECUTION` | deletes an execution |
-| `hausarbeit/subscribe` | `WS_SUBSCRIBE` | push on every data change |
-
-**Example** – retrieve the log of the last executions via the developer tools (WebSocket):
-
-```json
-{ "id": 1, "type": "hausarbeit/log", "limit": 500 }
+```yaml
+alias: Chores – bathroom overdue
+triggers:
+  - trigger: time
+    at: "18:00:00"
+conditions:
+  - condition: template
+    value_template: >-
+      {% set last = states('sensor.hausarbeit_clean_the_bathroom_last_done') %}
+      {{ last in ['unknown', 'unavailable'] or
+         (now() - as_datetime(last)).days >= 3 }}
+actions:
+  - action: notify.family
+    data:
+      message: The bathroom has not been cleaned for 3 days.
 ```
 
-The returned JSON list contains `id`, `person_id`, `task_id`, `ts` and
-`note` per entry and can thus be exported or processed further without detours.
+## WebSocket API & raw data
 
-### Correcting or deleting individual executions
+The cards use these commands; you can use them for exports or your own tools.
 
-The claim card provides an **undo button** for the most recently logged execution.
-You can correct or delete any past entries via the HA interface under
-**Developer Tools → Actions** using the services `hausarbeit.correct_execution`
-or `hausarbeit.delete_execution` – you find the matching `execution_id` via
-`hausarbeit/log` (see the table above). A dedicated log management card is planned for
-a later version.
+| Type | Purpose |
+|---|---|
+| `hausarbeit/persons` | all people |
+| `hausarbeit/tasks` | all tasks |
+| `hausarbeit/targets` | targets incl. actual / remaining / % / on pace |
+| `hausarbeit/log` | execution log, newest first; optional `person_id`, `task_id`, `limit` (1–100000, default 100) |
+| `hausarbeit/stats` | ranking, per-task breakdown, time windows; optional `days` |
+| `hausarbeit/log_execution` | log an entry (`person_id`, `task_id`, optional `ts`, `note`) |
+| `hausarbeit/delete_execution` | delete an entry (`execution_id`) – see [Permissions](#permissions) |
+| `hausarbeit/subscribe` | pushes `{"event": "updated"}` on every change |
 
----
+Example: `{"id": 1, "type": "hausarbeit/log", "limit": 500}` returns `executions`
+(each with `id`, `person_id`, `person_name`, `task_id`, `task_name`, `ts`, `note`) and
+`total`.
 
-## FAQ & Troubleshooting
+## Permissions
 
-**The cards do not appear / "Custom element doesn't exist".**
-The card resources are automatically registered when the integration starts
-(`/hausarbeit_frontend/…`). After the initial installation, therefore **restart Home
-Assistant** once and then perform a **hard reload** of the browser (clear the cache). The
-registration can be checked under **Settings → Dashboards → ⋮ → Resources**.
+The integration is meant for a family dashboard, so non-admin users can use the cards:
 
-**Periods/statistics are "wrong" – incorrect week start or time zone.**
-Periods are calculated based on the **HA time zone** and the **week start** option
-(`week_start`, default Monday = `0`). Timestamps (`ts`) are stored internally in **UTC**
-and converted to local time for day/week/month boundaries. Adjust the week start in the
-options flow if the week should begin on Sunday, for example.
+- **Every logged-in user** can read the data, log chores (card or `log_execution`) and
+  undo entries **they logged themselves** with the claim card.
+- **Administrators** can additionally delete any entry and manage people, tasks and
+  targets (options flow and the other actions).
+- Automations and scripts are not restricted.
 
-**A sensor does not update immediately.**
-Sensors are updated via the dispatcher signal `hausarbeit_updated`. If a
-value gets stuck, reloading the integration helps
-(**Devices & Services → Hausarbeit-Tracker → ⋮ → Reload**). The statistics state always
-refers to the configured period `stats_days` (default 90 days).
+## Architecture & data model
 
-**What happens during an update / a migration?**
-The store has `STORAGE_VERSION = 1`. Future schema changes are migrated automatically on
-load via `async_migrate_func`; manual intervention is not needed. Before larger updates,
-an HA backup is nevertheless recommended.
+```mermaid
+flowchart LR
+    subgraph UI["Home Assistant"]
+        OF["Options flow"]
+        SVC["Actions hausarbeit.*"]
+        CARDS["Lovelace cards"]
+    end
+    COORD["Coordinator"]
+    STORE[("Storage\nhausarbeit_data")]
+    SENSORS["Sensors"]
+    WS["WebSocket API"]
 
-**Can I run everything only via YAML/service?**
-Yes. The options flow is convenient, but all master data and log operations are also
-available via the [Services](#services) (UI-first, but not UI-mandatory).
+    OF --> COORD
+    SVC --> COORD
+    CARDS --> WS --> COORD
+    COORD <--> STORE
+    COORD -- "update signal\n(on change + hourly)" --> SENSORS
+    COORD -- "update signal" --> WS
+```
 
----
+Data is stored in `.storage/hausarbeit_data` (version 1.2):
+
+```jsonc
+{
+  "persons":    [{ "id": "per_ab12cd34", "name": "Anna", "icon": "mdi:account",
+                   "color": "#ff8800", "ha_person_entity": "person.anna",
+                   "created": "2026-08-19T08:00:00+00:00" }],
+  "tasks":      [{ "id": "tsk_11aa22bb", "name": "Dishwasher", "icon": "mdi:dishwasher",
+                   "category": "Kitchen", "points": 1, "active": true,
+                   "created": "2026-08-19T08:00:00+00:00" }],
+  "targets":    [{ "id": "tgt_55ee66ff", "person_id": "per_ab12cd34",
+                   "task_id": "tsk_11aa22bb", "period": "week", "count": 3,
+                   "created": "2026-08-19T08:00:00+00:00" }],
+  "executions": [{ "id": "exe_77aa88bb", "person_id": "per_ab12cd34",
+                   "task_id": "tsk_11aa22bb", "ts": "2026-08-19T18:30:00+00:00",
+                   "note": "", "user_id": "…" }]
+}
+```
+
+Timestamps are stored in UTC; day/week/month boundaries are calculated in Home
+Assistant's time zone. `user_id` is only set for entries logged via the cards.
+Diagnostics (*Download diagnostics* on the integration) contain counts and IDs only;
+names, colors, linked persons and notes are left out.
+
+## FAQ & troubleshooting
+
+**The cards do not show up ("Custom element doesn't exist").**
+The integration loads the cards itself (from `/hausarbeit_frontend/…`); they are **not**
+listed under *Dashboards → Resources*. Restart Home Assistant once after installing or
+updating, then reload the browser without cache (or clear the app cache on mobile).
+
+**Weekly targets start on the wrong day / periods look shifted.**
+Set the **week start** under *Configure → Settings* and check Home Assistant's time zone
+(*Settings → System → General*).
+
+**Why does the person sensor show fewer chores than "total"?**
+The state only counts the statistics period (`stats_days`); `total` counts everything.
+
+**What happens to my data on updates?**
+It is migrated automatically. 0.2.0 normalizes stored timestamps to UTC (same points in
+time). A Home Assistant backup before updating is always a good idea.
+
+**What happens if I remove the integration?**
+All people, tasks, targets and the log are deleted together with the integration.
+
+**Can I use it without the UI?**
+Yes – everything except the settings is also available as [actions](#actions-services).
+
+## Upgrading to 0.2.0
+
+- Minimum Home Assistant version is now **2025.2.0**.
+- Existing entity IDs stay the same. Sensors created **after** the update get English
+  name-based IDs, e.g. `sensor.hausarbeit_dishwasher_last_done` instead of
+  `…_zuletzt_erledigt` (display names still follow your language).
+- The unit of the person and target sensors is now `tasks` (was `Aufgaben`). If Home
+  Assistant reports a changed statistics unit (*Developer tools → Statistics*), choose to
+  update the unit – the values are the same counts.
+- Sensors of people/tasks/targets that were removed earlier are cleaned up from the
+  entity registry.
+- All actions except `log_execution` now require an administrator when called by a user
+  (automations are unaffected). Non-admins can still log chores and undo their own
+  entries on the claim card.
+- Removing the integration now deletes its stored data.
 
 ## License
 
-Released under the [MIT License](./LICENSE).
-
----
-
-<sub>Repository: <a href="https://github.com/Jo-Highness/hausarbeit">github.com/Jo-Highness/hausarbeit</a> · Integration "Hausarbeit-Tracker" · local &amp; without cloud.</sub>
+[MIT](./LICENSE)

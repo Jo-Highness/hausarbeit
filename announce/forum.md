@@ -1,7 +1,7 @@
 # Hausarbeit-Tracker — a local household-chore tracker (who did which chore, and when)
 
 **Repo:** https://github.com/Jo-Highness/hausarbeit
-**License:** MIT · **Minimum Home Assistant:** 2024.7 · **Current version:** 0.1.3
+**License:** MIT · **Minimum Home Assistant:** 2025.2 · **Current version:** 0.2.0
 
 <!-- IMAGE: hero/logo — insert custom_components/hausarbeit/brand/logo.png here (center, ~460px wide) -->
 
@@ -20,16 +20,18 @@ data lives in Home Assistant's own storage.
 
 ## Features
 
-- **UI-first setup** via a config flow and options flow — no YAML required. Services are
-  still available for automations if you want them.
+- **UI-first setup** via a config flow and options flow — no YAML required. Actions
+  (services) are still available for automations if you want them.
 - **People and tasks** you define yourself (name, icon, category, points/weight,
   active/inactive). A person can optionally be linked to an existing `person.*` entity.
 - **Log or backfill** a completion: log it immediately, or add one for a different time with
   an optional note. An undo button reverts the most recent entry.
 - **Target vs. actual per period** — set how often each person should do each task per day,
-  week, or month; sensors expose actual, remaining, percentage, and an on-track indicator.
+  week, or month; sensors expose actual, remaining, percentage, and an on-pace indicator.
+  Sensors refresh on every change and every full hour, so "today" and the current period
+  roll over at midnight.
 - **Statistics and ranking** over a configurable window (default 90 days), broken down by
-  task and by time window (today / 7 / 30 / 90 days / all).
+  task and by time window (today / 7 / 30 / 90 days / current month / total).
 - **Three bundled Lovelace cards** (see below), registered automatically as a frontend
   resource — no separate frontend install needed.
 - **A WebSocket API** and **dynamic per-person sensors** (plus one sensor per target), for
@@ -42,9 +44,6 @@ data lives in Home Assistant's own storage.
   time/note, plus an undo button.
 - `hausarbeit-stats-card` — the ranking of people and the breakdown by task / time window.
 - `hausarbeit-targets-card` — a progress bar per target for the current period.
-
-<!-- IMAGE: the repo ships screenshots under images/ (claim-card.png, stats-card.png, targets-card.png).
-     Insert them here as a 3-up row once captured. A short GIF of logging a chore + undo would fit well too. -->
 
 | Log a completion | Statistics & ranking | Target vs. actual |
 |:---:|:---:|:---:|
@@ -64,13 +63,11 @@ won't be needed anymore.
 
 ## Honest limitations
 
-- This is an **early 0.1.x release**. Expect rough edges and possible breaking changes
+- This is an **early 0.x release**. Expect rough edges and possible breaking changes
   before 1.0.
-- The **written documentation is fullest in German**. The primary `README.md` is in
-  English with a German section; a fuller German write-up lives in `README.de.md`.
+- Documentation is available in English (`README.md`) and German (`README.de.md`); the
+  UI is translated into English, German and Spanish.
 - It is a **tracker / bookkeeping tool**. It does not assign or enforce chores — it records
   what people did and reports on it.
-- Screenshots in the repo are being finalized; the images above are placeholders until the
-  captures are in.
 
 Feedback, bug reports, and ideas are welcome on the issue tracker. Thanks for taking a look.

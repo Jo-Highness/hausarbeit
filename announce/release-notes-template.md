@@ -1,7 +1,7 @@
 <!--
   Release-notes template for Hausarbeit-Tracker.
   Copy this file per release, fill in the sections, and delete any that are empty.
-  - Replace vNEW with the tag being released (e.g. v0.1.4) and vPREV with the previous tag.
+  - Replace vNEW with the tag being released (e.g. v0.2.0) and vPREV with the previous tag.
   - Keep entries user-facing and concise; link issues/PRs where useful (#123).
   - Drop empty sections rather than leaving "None".
 -->
@@ -11,7 +11,7 @@
 _Local household-chore tracker for Home Assistant — logs who did which chore and when,
 keeps statistics and a target-vs-actual comparison per period. Fully local, no cloud._
 
-**Minimum Home Assistant:** 2024.7 · **License:** MIT
+**Minimum Home Assistant:** 2025.2 · **License:** MIT
 
 ## Highlights
 

@@ -1,7 +1,7 @@
 # Requirements — Hausarbeit-Tracker (Clean-Room)
 
 > Code-unabhaengiges Anforderungsdokument (WAS/WARUM). Ziel: die Integration laesst sich
-> allein hieraus als Greenfield neu bauen. Stand: v0.1.4 (2026-08). Bezug: README,
+> allein hieraus als Greenfield neu bauen. Stand: v0.2.0 (2026-10). Bezug: README,
 > CHANGELOG, HACS-Readiness-Kampagne.
 
 ## 1. Zweck
@@ -77,12 +77,18 @@ entfernt deren Soll-Vorgaben, das Ausfuehrungs-Log bleibt als Rohdaten erhalten
     Erfuellungsgrad, im_soll, Periode, Periodenstart/-ende, Person-/Aufgaben-ID;
     Name "Person · Aufgabe (Periode)".
   - je Aufgabe: Diagnose-Sensor "zuletzt erledigt" (Zeitstempel-Typ) mit Person als Attribut.
-  Sensoren einer geloeschten Person/Aufgabe/Vorgabe werden entfernt.
+  Sensoren einer geloeschten Person/Aufgabe/Vorgabe werden samt Entity-Registry-Eintrag
+  entfernt (keine Waisen). Zeitabhaengige Werte (heute, gleitende Fenster, laufende
+  Periode, on_track) werden stuendlich und damit auch zu lokaler Mitternacht neu berechnet.
+  Entitaetsnamen und Einheit sind uebersetzt (translation_key).
 - **FR12 WebSocket-API** (fuer Karten und Export) mit den Kommandos `hausarbeit/persons`,
   `/tasks`, `/targets` (mit Auswertung), `/log` (Filter Person/Aufgabe, Limit 1..100000,
   Default 100, neueste zuerst, Namen angereichert, Gesamtzahl), `/stats` (Parameter days),
   `/log_execution`, `/delete_execution`, `/subscribe` (Push "updated" bei jeder
-  Datenaenderung). Ohne eingerichteten Haushalt: Fehler "not_ready".
+  Datenaenderung). Ohne eingerichteten Haushalt: Fehler "not_ready". Lesen/Loggen darf
+  jede*r angemeldete Benutzer*in; `/delete_execution` nur Admins oder fuer selbst per Karte
+  geloggte Eintraege (Undo). Stammdaten-Services sowie delete/correct_execution sind
+  Admin-Services; log_execution steht allen offen.
 - **FR13 Lovelace-Karten**, von der Integration selbst als Frontend-Ressource ausgeliefert
   und automatisch geladen (kein separates Frontend-Paket, Cache-Bust per Version):
   - Claim-Karte: Person waehlen (Chip), Aufgabe antippen = loggen; bei nur einer Person
@@ -100,18 +106,22 @@ entfernt deren Soll-Vorgaben, das Ausfuehrungs-Log bleibt als Rohdaten erhalten
 
 ## 5. Nicht-funktionale Anforderungen
 - **NFR1 Lokal/offline**: Keine externe Kommunikation, keine Python-Abhaengigkeiten ueber
-  HA hinaus; IoT-Klasse local_push.
+  HA hinaus; IoT-Klasse calculated, Integrationstyp service, genau ein Eintrag
+  (single_config_entry).
 - **NFR2 Persistenz**: Daten im versionierten HA-Storage (Schluessel `hausarbeit_data`,
   Major/Minor-Version, Migrationspfad; fehlende Top-Level-Listen werden beim Laden
-  ergaenzt). Schreiben gebuendelt/verzoegert (ca. 2 s), Event-Loop wird nie blockiert.
+  ergaenzt). Minor-Version 2 normalisiert Zeitstempel auf UTC. Beim Entfernen der
+  Integration wird die Datei geloescht. Schreiben gebuendelt/verzoegert (ca. 2 s), Event-Loop wird nie blockiert.
 - **NFR3 Konsistenz**: Jede Datenaenderung benachrichtigt Sensoren und WS-Abonnenten
-  ueber genau ein internes Signal; Sensoren pollen nicht.
-- **NFR4 Kompatibilitaet**: HA >= 2024.7.0; verifiziert bis 2026.8. Karten benutzen das
+  ueber genau ein internes Signal (plus stuendlicher Zeit-Tick); Sensoren pollen nicht,
+  jede Entitaet schreibt ihren Zustand pro Signal genau einmal.
+- **NFR4 Kompatibilitaet**: HA >= 2025.2.0; verifiziert bis 2026.2 (Tests) bzw. 2026.8. Karten benutzen das
   von HA geladene Lit (kein Build, kein CDN) und warten robust, bis eine Lit-faehige
   Basis verfuegbar ist; Registrierung der Karten-Module erst nach HA-Start.
 - **NFR5 Testbarkeit**: Perioden-/Statistiklogik frei von HA-Abhaengigkeiten und unit-
   testbar; Integrationstests fuer Setup, Services, Sensoren, Config-/Options-Flow und
-  Store (>= 60 Tests, CI gruen: hassfest, HACS-Validierung, Ruff).
+  Store, WebSocket-API, Zeit-Tick, Registry-Aufraeumen und Migration (>= 100 Tests,
+  CI gruen: hassfest, HACS-Validierung, Ruff, pytest, `node --check` der Karten).
 - **NFR6 HACS-Reife**: hacs.json, manifest mit Version/Codeowner/Issue-Tracker,
   README (EN primaer, DE-Fassung), CHANGELOG (Keep a Changelog, SemVer), CONTRIBUTING,
   SECURITY, CODE_OF_CONDUCT, Issue-/PR-Vorlagen, Release-Drafter, Dependabot.
