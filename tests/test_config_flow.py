@@ -52,7 +52,7 @@ async def test_options_settings(setup_integration, hass):
     result = await _menu(hass, result["flow_id"], "settings")
     assert result["type"] == FlowResultType.FORM
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {CONF_WEEK_START: 6, CONF_STATS_DAYS: 30}
+        result["flow_id"], {CONF_WEEK_START: "6", CONF_STATS_DAYS: 30}
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()

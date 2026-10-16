@@ -45,7 +45,7 @@ ALL_SERVICES = [
 async def test_setup_creates_coordinator(setup_integration, hass):
     entry, coordinator = setup_integration
     assert isinstance(coordinator, HausarbeitCoordinator)
-    assert hass.data[DOMAIN][entry.entry_id] is coordinator
+    assert entry.runtime_data is coordinator
 
 
 async def test_all_services_registered(setup_integration, hass):
